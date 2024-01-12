@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "allowJs": true,
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "jsx": "preserve", // Necessary for volar to lint Vue template sections
+    // Do not enforce strict property initialization. This allows us to init
+    // states in classes by calling an init-function rather than doing it
+    // manually, which is helpful for classes in which we need to reset the
+    // state sometimes, so we can save some code.
+    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "baseUrl": "."
+  },
+  "include": [
+    // The source files need to be compiled and linted; as do the test files.
+    "src/**/*",
+    "forge.config.js",
+    "webpack.*.js"
+  ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}

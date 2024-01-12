@@ -1,0 +1,40 @@
+{
+  "name": "local-chat",
+  "version": "0.1.0",
+  "description": "LocalChat is your personal assistant: An LLM running locally on your computer.",
+  "main": ".webpack/main",
+  "author": "Hendrik Erz <hendrik@zettlr.com>",
+  "license": "GPL-3.0-only",
+  "private": false,
+  "scripts": {
+    "start": "NODE_ENV=develop electron-forge start"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/plugin-webpack": "^7.2.0",
+    "@types/luxon": "^3.4.0",
+    "@types/showdown": "^2.0.6",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "copy-webpack-plugin": "^12.0.1",
+    "css-loader": "^6.9.0",
+    "electron": "^28.1.3",
+    "electron-devtools-assembler": "^1.2.0",
+    "eslint": "^8.56.0",
+    "eslint-config-standard-with-typescript": "^43.0.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-vue": "^9.20.0",
+    "highlight.js": "^11.9.0",
+    "luxon": "^3.4.4",
+    "node-llama-cpp": "^2.8.3",
+    "node-loader": "^2.0.0",
+    "pinia": "^2.1.7",
+    "showdown": "^2.1.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "vue": "^3.4.10",
+    "vue-loader": "^17.4.2"
+  }
+}

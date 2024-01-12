@@ -1,0 +1,4 @@
+node_modules
+models
+.webpack
+.DS_STORE
