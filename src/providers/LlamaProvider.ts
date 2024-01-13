@@ -79,7 +79,7 @@ export class LlamaProvider {
 
   async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = []) {
     if (modelDescriptor.path === this.loadedModel?.path) {
-      return // Nothing to do
+      return // Nothing to do // TODO: This prevents using different chat messages!
     }
 
     this.setStatus(LLAMA_STATUS.loadingModel)
