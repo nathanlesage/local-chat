@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, shell } from 'electron'
 import path from 'path'
 import { promises as fs } from 'fs'
 
@@ -25,14 +25,15 @@ const SUPPORTED_MODEL_TYPES = [
 
 export class ModelManager {
   private static thisInstance: ModelManager
-  private models: ModelDescriptor[]
 
   private constructor () {
-    this.models = []
-
     // RETURNS: modelName[]
     ipcMain.handle('get-available-models', async (event, args) => {
       return await this.getAvailableModels()
+    })
+
+    ipcMain.handle('open-model-directory', async (event, args) => {
+      return await shell.openPath(this.modelDirectory)
     })
   }
 

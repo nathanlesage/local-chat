@@ -61,7 +61,7 @@ export class LlamaProvider {
    *
    * @return  {ConversationInteraction[]}            The converted messages
    */
-  private convertConversationMessags (messages: ChatMessage[]): ConversationInteraction[] {
+  private convertConversationMessages (messages: ChatMessage[]): ConversationInteraction[] {
     if (messages.length % 2 !== 0) {
       console.warn('Will omit messages from the conversation before feeding to the model: No paired selection.')
     }
@@ -90,8 +90,7 @@ export class LlamaProvider {
       context: new resolved.LlamaContext({
         model: new resolved.LlamaModel({ modelPath: modelDescriptor.path } as LlamaModelOptions)
       } as LlamaContextOptions),
-      printLLamaSystemInfo: false,
-      conversationHistory: this.convertConversationMessags(previousConversation)
+      conversationHistory: this.convertConversationMessages(previousConversation)
     } as LlamaChatSessionOptions)
 
     this.loadedModel = modelDescriptor
@@ -105,6 +104,7 @@ export class LlamaProvider {
     if (this.session === undefined) {
       throw new Error('Cannot prompt model: None loaded')
     }
+
     this.setStatus(LLAMA_STATUS.generating)
     const context = this.session.context
     const answer = await this.session.prompt(message, {

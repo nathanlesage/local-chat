@@ -1,5 +1,6 @@
 <template>
   <div id="statusbar">
+    <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
     <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
     <!-- Model indication -->
     <div id="llama-status">
@@ -7,6 +8,12 @@
     </div>
     <div v-if="isBusy" v-html="LoadingSpinner"></div>
   </div>
+  <Teleport to="body">
+    <ModelManager
+      v-if="showModelManager"
+      v-on:close-modal="showModelManager = !showModelManager"
+    ></ModelManager>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -15,11 +22,14 @@ import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/providers/LlamaProvider'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
+import ModelManager from './ModelManager.vue'
 
 const ipcRenderer = window.ipc
 
 // Copied from LlamaStatus since we cannot refer to things from the main process except for with Types
 const llamaStatus = ref<LlamaStatus>({ status: 'uninitialized', message: 'Provider not initialized' })
+
+const showModelManager = ref<boolean>(false)
 
 ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
   llamaStatus.value = newStatus

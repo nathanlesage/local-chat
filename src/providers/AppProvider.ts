@@ -4,6 +4,7 @@ import {
   BrowserWindowConstructorOptions,
   ipcMain,
   dialog,
+  shell,
   type MessageBoxOptions
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
@@ -80,8 +81,10 @@ export class AppProvider {
         return true
       }
 
-      // Prevent any other navigation from within the window.
+      // Prevent any other navigation from within the window and open it
+      // externally.
       event.preventDefault()
+      shell.openExternal(url).catch(err => console.error(err))
     })
 
     this.mainWindow.once('ready-to-show', () => {

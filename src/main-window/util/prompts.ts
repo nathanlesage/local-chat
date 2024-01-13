@@ -19,6 +19,12 @@ export function prompt (setup: Partial<AppNotification> & { message: string }) {
 }
 
 export function alertError (error: Error) {
+  // Most errors will be transmitted over the IPC bridge, which will effectively
+  // give two error messages. Filter the IPC-related one out.
+  if (error.message.startsWith('Error invoking remote method')) {
+    error.message = error.message.substring(error.message.indexOf(': Error:') + 9)
+  }
+
   const notification: AppNotification = {
     title: error.name,
     message: error.message,

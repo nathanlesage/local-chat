@@ -76,6 +76,10 @@ body {
   svg {
     stroke: #eee;
   }
+
+  a {
+    color: rgb(138, 130, 255);
+  }
 }
 </style>
 ./pinia/models

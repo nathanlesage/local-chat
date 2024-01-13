@@ -128,6 +128,10 @@ function prompt () {
   const start = Date.now()
   currentGenerationTime.value = 0
   responseText.value = DEFAULT_RESPONSE_TEXT
+  const elem = document.getElementById('chat')
+  if (elem !== null) {
+    elem.scrollTop = elem.scrollHeight
+  }
 
   const off = ipcRenderer.on('answer-token-stream', (event, payload: string) => {
     if (responseText.value === DEFAULT_RESPONSE_TEXT) {
@@ -147,9 +151,8 @@ function prompt () {
       isGenerating.value = false
       clearInterval(int)
       off() // Remove event listener again
-      const elem = document.getElementById('chat')
       if (elem !== null) {
-        elem.scrollTo({ top: elem.getBoundingClientRect().height })
+        elem.scrollTop = elem.scrollHeight
       }
     })
 
