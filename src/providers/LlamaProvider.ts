@@ -1,116 +1,121 @@
-import { app, ipcMain } from 'electron'
-import path from 'path'
-import { promises as fs } from 'fs'
-import type { LlamaModel, LlamaContext, LlamaChatSession, ConversationInteraction } from 'node-llama-cpp'
+import { ipcMain } from 'electron'
+import type { LlamaChatSession, ConversationInteraction, LlamaChatSessionOptions, LlamaModelOptions, LlamaContextOptions } from 'node-llama-cpp'
 import mod from 'node-llama-cpp'
-import { ModelManager } from './ModelManager'
-import { broadcastIPCMessage } from '../util/broadcast-ipc-message'
+import { ModelDescriptor } from './ModelManager'
+import { broadcastIPCMessage } from './util/broadcast-ipc-message'
+import { ChatMessage } from './ConversationManager'
 
-export interface ChatMessage {
-  role: 'user'|'assistant'
-  content: string
-  timestamp: number // TODO
-  generationTime: number // TODO
+export interface LlamaStatus {
+  status: 'uninitialized'|'ready'|'loading'|'generating'|'error'
+  message: string
 }
 
-export interface Conversation {
-  description: string
-  startedAt: number
-  modelId: string
-  messages: ChatMessage[]
+export const LLAMA_STATUS: Record<string, LlamaStatus> = {
+  uninitialized: { status: 'uninitialized', message: 'Provider not initialized' },
+  loadingModel: { status: 'loading', message: 'Loading model' },
+  generating: { status: 'generating', message: 'Generating response' },
+  ready: { status: 'ready', message: 'Model ready' },
+  error: { status: 'error', message: 'Model encountered an error' }
 }
 
 export class LlamaProvider {
-  private modelPath: string
-  private loadedModelID: string
+  private loadedModel: ModelDescriptor|undefined
   private session: LlamaChatSession|undefined
-  private conversation: Conversation
-  private readonly manager: ModelManager
+  private status: LlamaStatus
 
   constructor () {
-    this.loadedModelID = ''
-    this.modelPath = ''
-    this.manager = ModelManager.getModelManager()
+    this.setStatus(LLAMA_STATUS.uninitialized)
 
     // Hook up event listeners
 
-    ipcMain.handle('get-model-id', (event, args) => {
-      return this.loadedModelID
+    ipcMain.handle('get-loaded-model', (event, args) => {
+      return this.loadedModel
     })
 
-    ipcMain.handle('select-model', async (event, args) => {
-      return await this.loadModel(args)
-    })
-
-    ipcMain.handle('get-conversation', async (event, args) => {
-      return this.conversation
-    })
-
-    ipcMain.handle('prompt', async (event, args) => {
-      if (this.session === undefined) {
-        throw new Error('Cannot prompt model: None loaded')
-      }
-
-      this.conversation.messages.push({
-        role: 'user',
-        content: args,
-        timestamp: Date.now(),
-        generationTime: 0
-      })
-
-      broadcastIPCMessage('conversation-updated', this.conversation)
-
-      const start = Date.now()
-
-      const answer = await this.session.prompt(args)
-
-      this.conversation.messages.push({
-        role: 'assistant',
-        content: answer,
-        timestamp: Date.now(),
-        generationTime: Date.now() - start
-      })
-
-      broadcastIPCMessage('conversation-updated', this.conversation)
-    })
-
-    ipcMain.handle('reset', async (event, args) => {
-      return await this.resetSession()
+    ipcMain.handle('get-llama-status', (event) => {
+      return this.status
     })
   }
 
-  async boot() {
+  public getStatus () {
+    return this.status
   }
 
-  async loadModel (modelPath: string) {
-    const availableModels = await this.manager.getAvailableModels()
-    const modelDescriptor = availableModels.find(model => model.path === modelPath)
+  public isReady () {
+    return this.status.status === 'ready'
+  }
 
-    if (modelDescriptor === undefined) {
-      throw new Error(`Model ${modelPath} not found`)
+  public getLoadedModel () {
+    return this.loadedModel
+  }
+
+  private setStatus (status: LlamaStatus) {
+    this.status = status
+    broadcastIPCMessage('llama-status-updated', this.status)
+  }
+
+  /**
+   * Small helper function that converts given chat messages into the format accepted by llama.cpp
+   *
+   * @param   {ChatMessage[]}              messages  The messages to convert
+   *
+   * @return  {ConversationInteraction[]}            The converted messages
+   */
+  private convertConversationMessags (messages: ChatMessage[]): ConversationInteraction[] {
+    if (messages.length % 2 !== 0) {
+      console.warn('Will omit messages from the conversation before feeding to the model: No paired selection.')
     }
+
+    const conv: ConversationInteraction[] = []
+
+    for (let i = 0; i < messages.length; i += 2) {
+      const prompt = messages[i].content
+      const response = messages[i + 1].content
+      conv.push({ prompt, response })
+    }
+
+    return conv
+  }
+
+  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = []) {
+    if (modelDescriptor.path === this.loadedModel?.path) {
+      return // Nothing to do
+    }
+
+    this.setStatus(LLAMA_STATUS.loadingModel)
 
     const resolved = await (mod as any)
 
     this.session = new resolved.LlamaChatSession({
       context: new resolved.LlamaContext({
-        model: new resolved.LlamaModel({ modelPath: modelDescriptor.path })
-      })
-    })
+        model: new resolved.LlamaModel({ modelPath: modelDescriptor.path } as LlamaModelOptions)
+      } as LlamaContextOptions),
+      printLLamaSystemInfo: false,
+      conversationHistory: this.convertConversationMessags(previousConversation)
+    } as LlamaChatSessionOptions)
 
-    this.modelPath = modelDescriptor.path
-    this.loadedModelID = modelDescriptor.name
-    this.conversation = {
-      description: '',
-      startedAt: Date.now(),
-      modelId: this.loadedModelID,
-      messages: []
-    }
+    this.loadedModel = modelDescriptor
 
-    broadcastIPCMessage('loaded-model-updated', this.loadedModelID)
+    this.setStatus(LLAMA_STATUS.ready)
+
+    broadcastIPCMessage('loaded-model-updated', this.loadedModel)
   }
 
-  async resetSession () {
-    await this.loadModel(this.modelPath)
+  public async prompt (message: string, onToken?: (chunk: string) => void): Promise<string> {
+    if (this.session === undefined) {
+      throw new Error('Cannot prompt model: None loaded')
+    }
+    this.setStatus(LLAMA_STATUS.generating)
+    const context = this.session.context
+    const answer = await this.session.prompt(message, {
+      onToken: (chunk) => {
+        if (onToken !== undefined) {
+          const decoded = context.decode(chunk)
+          onToken(decoded)
+        }
+      }
+    })
+    this.setStatus(LLAMA_STATUS.ready)
+    return answer
   }
 }

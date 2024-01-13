@@ -1,26 +1,42 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions } from 'electron'
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
-import { LlamaProvider } from './LlamaProvider'
+import {
+  app,
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  ipcMain,
+  dialog,
+  type MessageBoxOptions
+} from 'electron'
+import { ConversationManager } from './ConversationManager'
+
+export interface AppNotification {
+  title: string
+  message: string
+  detail?: string
+  severity: 'info'|'error'|'warning'
+}
 
 export class AppProvider {
   private mainWindow: BrowserWindow|undefined
-  private llamaProvider: LlamaProvider
   constructor () {
-    this.llamaProvider = new LlamaProvider()
+    ipcMain.on('prompt', (event, args: AppNotification) => {
+      const opt: MessageBoxOptions = {
+        title: args.title,
+        message: args.message,
+        detail: args.detail,
+        type: args.severity,
+        buttons: ['Ok'], defaultId: 0, cancelId: 0,
+      }
+      if (this.mainWindow !== undefined) {
+        dialog.showMessageBox(this.mainWindow, opt)
+      } else {
+        dialog.showMessageBox(opt)
+      }
+    })
   }
 
   async boot () {
-    if (!app.isPackaged) {
-      try {
-        // Load Vue developer extension
-        await installExtension(VUEJS_DEVTOOLS)
-      } catch (err: any) {
-        // pass
-      }
-    }
-
-    // Boot the other providers, then show the window.
-    await this.llamaProvider.boot()
+    // Access the Conversation manager to instantiate it
+    ConversationManager.getConversationManager()
     await this.showMainWindow()
   }
 
@@ -31,8 +47,8 @@ export class AppProvider {
     }
 
     const windowConfig: BrowserWindowConstructorOptions = {
-      width: 640,
-      height: 480,
+      width: 800,
+      height: 640,
       minWidth: 300,
       minHeight: 200,
       backgroundColor: '#fff',

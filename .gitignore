@@ -1,4 +1,7 @@
+# Ignore common files and folders
 node_modules
-models
 .webpack
 .DS_STORE
+
+# This folder is used for the userData in development
+.data

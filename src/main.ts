@@ -1,6 +1,8 @@
 import { app } from 'electron'
 import { AppProvider } from './providers/AppProvider'
 import path from 'path'
+import fs from 'fs'
+import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -11,13 +13,15 @@ if (!app.requestSingleInstanceLock()) {
 
 const localChat = new AppProvider()
 
+// Run the pre-boot setup
+preBootSetup()
+
 app.whenReady().then(() => {
-  if (!app.isPackaged) {
-    // __dirname === 'root directory/.webpack/main'
-    app.setPath('appData', path.join(__dirname, '../../'))
-    console.log('Development appData path is now:', app.getPath('appData'))
-  }
-  localChat.boot().catch(err => console.error(err))
+  afterReadySetup()
+    .then(() => {
+      localChat.boot().catch(err => console.error(err))
+    })
+    .catch(err => console.error(err))
 })
 
 app.on('second-instance', (event, argv, cwd) => {
@@ -36,3 +40,28 @@ app.on('window-all-closed', function () {
     app.quit()
   }
 })
+
+////////////////////////////////// FUNCTIONS ///////////////////////////////////
+
+function preBootSetup () {
+  if (!app.isPackaged) {
+    // __dirname === 'root directory/.webpack/main'
+    const developAppDataPath = path.join(__dirname, '../../.data')
+    if (!fs.existsSync(developAppDataPath)) {
+      fs.mkdirSync(developAppDataPath, { recursive: true })
+    }
+
+    app.setPath('userData', developAppDataPath)
+    app.setAppLogsPath(path.join(developAppDataPath, 'logs'))
+  }
+}
+
+async function afterReadySetup () {
+  if (!app.isPackaged) {
+    try {
+      await installExtension(VUEJS_DEVTOOLS)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+}
