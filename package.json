@@ -8,7 +8,12 @@
   "private": false,
   "scripts": {
     "start": "NODE_ENV=develop electron-forge start",
-    "package": "electron-forge package"
+    "package": "electron-forge package",
+    "package:mac-x64": "npm_config_arch=x64 electron-forge package --platform=darwin --arch=x64",
+    "package:mac-arm": "npm_config_arch=arm64 electron-forge package --platform=darwin --arch=arm64",
+    "package:win-x64": "npm_config_arch=x64 electron-forge package --platform=win32 --arch=x64",
+    "package:linux-x64": "npm_config_arch=x64 electron-forge package --platform=linux --arch=x64",
+    "package:linux-arm": "npm_config_arch=arm64 electron-forge package --platform=linux --arch=arm64"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",
