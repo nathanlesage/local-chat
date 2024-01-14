@@ -5,7 +5,10 @@ import { ref } from 'vue'
 
 const ipcRenderer = window.ipc
 
-export const useModelStore = defineStore('config', () => {
+/**
+ * This store handles anything relating to available models.
+ */
+export const useModelStore = defineStore('model-store', () => {
   const models = ref<ModelDescriptor[]>([])
   const currentModel = ref<ModelDescriptor|undefined>(undefined)
 

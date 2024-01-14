@@ -1,5 +1,6 @@
 <template>
   <aside id="conversations">
+    <h2 style="font-size: 100%;">Your Conversations</h2>
     <div v-if="conversationStore.conversations.length === 0">
       No conversations.
     </div>
@@ -13,7 +14,7 @@
       v-on:click="selectConversation(conv.id)"
     >
       <h3 class="id">{{ conv.id }}</h3>
-      <span class="timestamp">{{ formatDate(conv.startedAt) }}</span>
+      <span class="timestamp">{{ formatDate(conv.startedAt, 'date') }}</span>
       <span class="description">{{ conv.description }}</span>
       <span class="message-count">{{ conv.messages.length }} messages</span>
       <button class="delete" v-on:click.prevent.stop="deleteConversation(conv.id)">Delete</button>

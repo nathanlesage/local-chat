@@ -126,6 +126,13 @@ body {
   background-color: white;
 }
 
+select, button {
+  background-color: rgb(230, 230, 230);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #222230;

@@ -1,8 +1,8 @@
 <template>
   <div id="chat-wrapper">
     <div id="chat">
-      <p v-if="currentConversation !== undefined">
-        You are conversing with: <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>.
+      <p v-if="currentConversation !== undefined" style="display: flex; align-items: center;">
+        You are conversing with&nbsp;<ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
       </p>
       <div
         v-if="currentConversation !== undefined"
@@ -11,8 +11,8 @@
       >
         <div class="message-header">
           <h4>{{ messageUser(message.role) }}:</h4>
-          <div class="message-timestamp">{{ formatDate(message.timestamp) }}</div>
-          <div class="message-generation-time">
+          <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
+          <div class="message-generation-time" v-if="message.generationTime > 0">
             Generated in {{  formatGenerationTime(message.generationTime) }}s
           </div>
         </div>
@@ -171,7 +171,7 @@ function selectModel (modelPath: string) {
 div#chat-wrapper {
   grid-area: chat;
   overflow-y: auto;
-  padding: 0 40px;
+  padding: 40px;
 }
 
 div#chat {

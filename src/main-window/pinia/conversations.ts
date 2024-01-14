@@ -5,6 +5,9 @@ import { ref } from 'vue'
 
 const ipcRenderer = window.ipc
 
+/**
+ * This store handles everything relating to the available conversations.
+ */
 export const useConversationStore = defineStore('conversation-store', () => {
   const conversations = ref<Conversation[]>([])
   const activeConversation = ref<string|undefined>(undefined)
@@ -35,6 +38,11 @@ export const useConversationStore = defineStore('conversation-store', () => {
     activeConversation.value = payload
   })
 
+  /**
+   * Returns the currently selected conversation.
+   *
+   * @return  {Conversation|undefined}  The active conversation or undefined.
+   */
   function getCurrentConversation (): Conversation|undefined {
     return conversations.value.find(c => c.id === activeConversation.value)
   }

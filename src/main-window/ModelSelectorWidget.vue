@@ -1,5 +1,5 @@
 <template>
-  <select v-on:change="selectModel">
+  <select class="model-selector" v-on:change="selectModel">
     <option disabled v-bind:selected="store.currentModel !== undefined">No model selected</option>
     <option
       v-for="model in store.models"
@@ -50,4 +50,6 @@ function selectModel (event: Event) {
 
 </script>
 
-<style></style>
+<style>
+
+</style>

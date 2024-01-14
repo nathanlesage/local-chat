@@ -43,6 +43,9 @@ app.on('window-all-closed', function () {
 
 ////////////////////////////////// FUNCTIONS ///////////////////////////////////
 
+/**
+ * Sets up things that must be done before the app fires its `ready` event.
+ */
 function preBootSetup () {
   if (!app.isPackaged) {
     // __dirname === 'root directory/.webpack/main'
@@ -56,6 +59,9 @@ function preBootSetup () {
   }
 }
 
+/**
+ * Sets up things that must be done after the app fires its `ready` event.
+ */
 async function afterReadySetup () {
   if (!app.isPackaged) {
     try {
