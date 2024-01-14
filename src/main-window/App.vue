@@ -1,13 +1,55 @@
 <template>
-  <Sidebar></Sidebar>
-  <Chat></Chat>
-  <Statusbar></Statusbar>
+  <div
+    id="window-content"
+    v-on:mouseup="endResizing"
+    v-on:mousemove="onResizing"
+  >
+    <Sidebar></Sidebar>
+    <Chat></Chat>
+    <Statusbar></Statusbar>
+    <div id="resizer" v-on:mousedown="beginResizing"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
+import { ref } from 'vue'
+
+const sidebarWidth = ref<string>('200px')
+
+const isResizing = ref<boolean>(false)
+const lastOffset = ref<number>(0)
+
+function onResize (event: MouseEvent) {
+  if (!isResizing.value) {
+    return
+  }
+
+  sidebarWidth.value = `${event.clientX}px`
+}
+
+function beginResizing (event: MouseEvent) {
+  isResizing.value = true
+  lastOffset.value = event.clientX
+}
+
+function onResizing (event: MouseEvent) {
+  if (!isResizing.value) {
+    return
+  }
+
+  event.preventDefault()
+  const offset = event.clientX
+  sidebarWidth.value = `${offset}px`
+  lastOffset.value = offset
+}
+
+function endResizing (event: MouseEvent) {
+  isResizing.value = false
+  lastOffset.value = 0
+}
 
 </script>
 
@@ -44,15 +86,40 @@ import Sidebar from './Sidebar.vue'
 }
 /* End loading spinner styles */
 
+:root {
+  --footer-height: 30px;
+}
 
 div#app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+div#window-content {
   display: grid;
   grid-template-areas: "sidebar chat" "statusbar statusbar";
-  grid-template-columns: 200px auto;
-  grid-template-rows: auto 30px;
+  /* Bind a variable size width to the template columns */
+  grid-template-columns: v-bind(sidebarWidth) auto;
+  grid-template-rows: auto var(--footer-height);
   width: 100vw;
   height: 100vh;
   overflow: auto;
+}
+
+div#resizer {
+  width: 6px;
+  position: absolute;
+  top: 0px;
+  bottom: var(--footer-height);
+  left: calc(v-bind(sidebarWidth) - 3px);
+  cursor: ew-resize;
+  transition: 0.2s background-color ease;
+  z-index: 1;
+}
+
+div#resizer:hover {
+  background-color: rgba(0, 0, 0, .5);
 }
 
 html, body {

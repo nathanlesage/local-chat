@@ -1,5 +1,5 @@
 {
-  "name": "local-chat",
+  "name": "LocalChat",
   "version": "0.1.0",
   "description": "LocalChat is your personal assistant: An LLM running locally on your computer.",
   "main": ".webpack/main",
@@ -7,7 +7,8 @@
   "license": "GPL-3.0-only",
   "private": false,
   "scripts": {
-    "start": "NODE_ENV=develop electron-forge start"
+    "start": "NODE_ENV=develop electron-forge start",
+    "package": "electron-forge package"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",

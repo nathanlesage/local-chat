@@ -12,11 +12,11 @@ module.exports = {
       // the modules will be code-signed. (They still end up in the final
       // app.asar file, but they will be code-signed.) Code signing these dylibs
       // is required on macOS for the Node process to properly load them.
-      unpack: '*.{node,dll}'
+      unpack: '*.{node,dll,metal,exp,lib}' // .metal, .exp, and .lib are llama.cpp dependencies
     },
     darwinDarkModeSupport: 'true',
     // Electron-forge automatically adds the file extension based on OS
-    // TODO icon: 'path/to/icon-folder',
+    icon: './static/icon',
     name: 'LocalChat',
     // The certificate is written to the default keychain during CI build.
     // See ./scripts/add-osx-cert.sh
@@ -40,10 +40,7 @@ module.exports = {
           appleIdPassword: process.env.APPLE_ID_PASS,
           teamId: 'QS52BN8W68'
         }
-      : false,
-    extraResource: [
-      'resources/icons/icon.code.icns'
-    ]
+      : false
   },
   plugins: [
     {

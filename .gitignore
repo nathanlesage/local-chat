@@ -5,3 +5,6 @@ node_modules
 
 # This folder is used for the userData in development
 .data
+
+# Ignore built apps.
+out

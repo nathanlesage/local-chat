@@ -1,7 +1,6 @@
 <template>
   <div id="statusbar">
     <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
-    <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
     <!-- Model indication -->
     <div id="llama-status">
       {{ llamaStatus.message }}
@@ -21,7 +20,6 @@ import LoadingSpinner from './icons/loading-spinner.svg'
 import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/providers/LlamaProvider'
 import { alertError } from './util/prompts'
-import ModelSelectorWidget from './ModelSelectorWidget.vue'
 import ModelManager from './ModelManager.vue'
 
 const ipcRenderer = window.ipc
@@ -44,11 +42,6 @@ ipcRenderer.invoke('get-llama-status')
     llamaStatus.value = status
   })
   .catch(err => alertError(err))
-
-function selectModel (modelPath: string) {
-  ipcRenderer.invoke('select-model', modelPath)
-    .catch(err => alertError(err))
-}
 </script>
 
 <style>

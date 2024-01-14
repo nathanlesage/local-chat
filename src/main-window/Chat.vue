@@ -2,7 +2,7 @@
   <div id="chat-wrapper">
     <div id="chat">
       <p v-if="currentConversation !== undefined">
-        You are conversing with: <strong>{{ currentConversation.model.name }}</strong>. Change this conversation's model with the dropdown in the statusbar.
+        You are conversing with: <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>.
       </p>
       <div
         v-if="currentConversation !== undefined"
@@ -71,6 +71,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.min.css'
 import type { ChatMessage, Conversation } from 'src/providers/ConversationManager'
 import { alertError } from './util/prompts'
+import ModelSelectorWidget from './ModelSelectorWidget.vue'
 
 const converter = new showdown.Converter()
 
@@ -158,6 +159,11 @@ function prompt () {
 
   // Immediately clear the value
   message.value = ''
+}
+
+function selectModel (modelPath: string) {
+  ipcRenderer.invoke('select-model', modelPath)
+    .catch(err => alertError(err))
 }
 </script>
 
