@@ -22,14 +22,6 @@ const sidebarWidth = ref<string>('200px')
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
 
-function onResize (event: MouseEvent) {
-  if (!isResizing.value) {
-    return
-  }
-
-  sidebarWidth.value = `${event.clientX}px`
-}
-
 function beginResizing (event: MouseEvent) {
   isResizing.value = true
   lastOffset.value = event.clientX
