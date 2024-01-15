@@ -22,9 +22,11 @@ export class LlamaProvider {
   private loadedModel: ModelDescriptor|undefined
   private session: LlamaChatSession|undefined
   private status: LlamaStatus
+  private lastLoadedConversationHistory: ChatMessage[]
 
   constructor () {
     this.setStatus(LLAMA_STATUS.uninitialized)
+    this.lastLoadedConversationHistory = []
 
     // Hook up event listeners
 
@@ -78,8 +80,11 @@ export class LlamaProvider {
   }
 
   async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = []) {
-    if (modelDescriptor.path === this.loadedModel?.path) {
-      return // Nothing to do // TODO: This prevents using different chat messages!
+    if (
+      modelDescriptor.path === this.loadedModel?.path &&
+      JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation)
+    ) {
+      return // Nothing to do
     }
 
     this.setStatus(LLAMA_STATUS.loadingModel)
