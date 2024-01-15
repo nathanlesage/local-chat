@@ -60,6 +60,7 @@ function openModelDirectory () {
 <style>
 div#model-manager-modal {
   position: absolute;
+  z-index: 2;
   top: 0px;
   left: 0px;
   right: 0px;

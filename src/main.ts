@@ -11,10 +11,9 @@ if (!app.requestSingleInstanceLock()) {
   app.exit(0)
 }
 
-const localChat = new AppProvider()
-
-// Run the pre-boot setup
+// Run the pre-boot setup. NOTE: Must run before we instantiate the AppProvider!
 preBootSetup()
+const localChat = new AppProvider()
 
 app.whenReady().then(() => {
   afterReadySetup()
@@ -70,4 +69,14 @@ async function afterReadySetup () {
       console.error(err)
     }
   }
+
+  app.setAboutPanelOptions({
+    applicationName: 'LocalChat',
+    applicationVersion: app.getVersion(),
+    copyright: `Copyright (c) 2023 - ${(new Date()).getFullYear()} by Hendrik Erz. Licensed via GNU GPL 3.0`,
+    credits: 'I am indebted to, among others, Georgi Gerganov for developing llama.cpp, and the contributors of withcatai (Cat AI) for building the Node.js bridge that LocalChat uses. Furthermore, I would like to thank the dozens of people involved in creating more and more new models that we can use with LocalChat.',
+    authors: ['Hendrik Erz'], // TODO: Somehow generate the contributors list.
+    website: 'https://www.hendrik-erz.de/', // TODO
+    iconPath: process.execPath
+  })
 }

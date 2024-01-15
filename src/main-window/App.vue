@@ -8,6 +8,9 @@
     <Chat></Chat>
     <Statusbar></Statusbar>
     <div id="resizer" v-on:mousedown="beginResizing"></div>
+    <Teleport to="body" v-if="showFirstStartGuide">
+      <FirstStartGuide v-on:close-modal="showFirstStartGuide = false"></FirstStartGuide>
+    </Teleport>
   </div>
 </template>
 
@@ -15,12 +18,21 @@
 import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
+import FirstStartGuide from './FirstStartGuide.vue'
 import { ref } from 'vue'
+
+const ipcRenderer = window.ipc
 
 const sidebarWidth = ref<string>('200px')
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
+const showFirstStartGuide = ref<boolean>(false)
+
+ipcRenderer.invoke('should-show-first-start-guide')
+  .then((res: boolean) => {
+    showFirstStartGuide.value = res
+  })
 
 function beginResizing (event: MouseEvent) {
   isResizing.value = true
@@ -127,7 +139,7 @@ body {
 }
 
 select, button {
-  background-color: rgb(230, 230, 230);
+  background-color: rgb(210, 210, 210);
   border: none;
   padding: 4px 10px;
   border-radius: 8px;

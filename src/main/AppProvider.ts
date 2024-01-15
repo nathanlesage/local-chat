@@ -8,6 +8,9 @@ import {
   type MessageBoxOptions
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
+import path from 'path'
+import fs from 'fs'
+import { setApplicationMenu } from './util/set-application-menu'
 
 export interface AppNotification {
   title: string
@@ -18,7 +21,27 @@ export interface AppNotification {
 
 export class AppProvider {
   private mainWindow: BrowserWindow|undefined
+  private showFirstStartGuide: boolean
+
   constructor () {
+    // FIRST START GUIDE CODE
+    const firstStartFile = path.join(app.getPath('userData'), 'first-start-done')
+    console.log(firstStartFile)
+    if (fs.existsSync(firstStartFile)) {
+      this.showFirstStartGuide = false
+    } else {
+      this.showFirstStartGuide = true
+    }
+
+    // Immediately create the lock file so we don't show the guide again.
+    fs.writeFileSync('first-start-done', 'true')
+
+    ipcMain.handle('should-show-first-start-guide', (event, args) => {
+      return this.showFirstStartGuide
+    })
+
+    // END FIRST START GUIDE CODE
+
     ipcMain.on('prompt', (event, args: AppNotification) => {
       const opt: MessageBoxOptions = {
         title: args.title,
@@ -38,6 +61,7 @@ export class AppProvider {
   async boot () {
     // Access the Conversation manager to instantiate it
     ConversationManager.getConversationManager()
+    setApplicationMenu()
     await this.showMainWindow()
   }
 
@@ -63,7 +87,7 @@ export class AppProvider {
 
     // Application icon for Linux. Cannot be embedded in the executable.
     if (process.platform === 'linux') {
-      // TODO windowConfig.icon = path.join(__dirname, 'icons/png/128x128.png')
+      windowConfig.icon = path.join(__dirname, 'icons/png/128x128.png')
     }
 
     this.mainWindow = new BrowserWindow(windowConfig)

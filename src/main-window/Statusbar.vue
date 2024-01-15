@@ -1,11 +1,11 @@
 <template>
   <div id="statusbar">
-    <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
     <!-- Model indication -->
     <div id="llama-status">
       {{ llamaStatus.message }}
     </div>
     <div v-if="isBusy" v-html="LoadingSpinner"></div>
+    <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
   </div>
   <Teleport to="body">
     <ModelManager
@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { ref, computed } from 'vue'
-import type { LlamaStatus } from 'src/providers/LlamaProvider'
+import type { LlamaStatus } from 'src/main/LlamaProvider'
 import { alertError } from './util/prompts'
 import ModelManager from './ModelManager.vue'
 
@@ -48,9 +48,16 @@ ipcRenderer.invoke('get-llama-status')
 div#statusbar {
   grid-area: statusbar;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: end;
+  gap: 20px;
+  padding: 0 20px;
   align-items: center;
-  background-color: rgb(200, 200, 200);
+  background-color: rgb(33, 33, 33);
+  color: white;
+}
+
+div#statusbar svg {
+  stroke: #eee;
 }
 
 @media (prefers-color-scheme: dark) {
