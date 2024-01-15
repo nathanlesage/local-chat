@@ -1,4 +1,4 @@
-import type { AppNotification } from "src/providers/AppProvider"
+import type { AppNotification } from "src/main/AppProvider"
 
 const ipcRenderer = window.ipc
 

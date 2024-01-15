@@ -1,6 +1,6 @@
 // Conversation store
 import { defineStore } from 'pinia'
-import type { Conversation } from 'src/providers/ConversationManager'
+import type { Conversation } from 'src/main/ConversationManager'
 import { ref } from 'vue'
 
 const ipcRenderer = window.ipc

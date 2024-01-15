@@ -1,6 +1,6 @@
 // Available models store
 import { defineStore } from 'pinia'
-import type { ModelDescriptor } from 'src/providers/ModelManager'
+import type { ModelDescriptor } from 'src/main/ModelManager'
 import { ref } from 'vue'
 
 const ipcRenderer = window.ipc

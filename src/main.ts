@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { AppProvider } from './providers/AppProvider'
+import { AppProvider } from './main/AppProvider'
 import path from 'path'
 import fs from 'fs'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'

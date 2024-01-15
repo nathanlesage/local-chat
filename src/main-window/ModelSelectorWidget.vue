@@ -13,30 +13,11 @@
 
 <script setup lang="ts">
 import { useModelStore } from './pinia/models'
+import { formatSize } from './util/sizes'
 
 const store = useModelStore()
 
 const emit = defineEmits<{ (e: 'select-model', modelPath: string): void }>()
-
-function formatSize (bytes: number): string {
-  let unit = 'B'
-  if (bytes > 1024) {
-    bytes /= 1024
-    unit = 'KB'
-  }
-  if (bytes > 1024) {
-    bytes /= 1024
-    unit = 'MB'
-  }
-  if (bytes > 1024) {
-    bytes /= 1024
-    unit = 'GB'
-  }
-
-  const roundedSize = Math.round(bytes * 10) / 10
-
-  return `${roundedSize} ${unit}`
-}
 
 function selectModel (event: Event) {
   const target = event.target

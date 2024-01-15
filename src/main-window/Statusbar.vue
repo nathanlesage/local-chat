@@ -60,3 +60,4 @@ div#statusbar {
 }
 </style>
 ./pinia/models
+src/main/LlamaProvider
