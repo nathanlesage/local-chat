@@ -16,36 +16,28 @@
         models, and others.
       </p>
       <p>
-        The ModelManager allows you to manage which models you have on your
-        computer and to download new ones. You can also see a variety of
-        information on each model.
+        To download a new model, you can either manually download it and move it
+        to the model directory, or paste the link into the text field below to
+        have LocalChat automatically download it for you. The model must be in
+        the GGUF file format.
       </p>
-      <p>
-        Downloading new models is easy. Simply follow these steps:
-      </p>
+      <p>To find new models, follow these steps:</p>
       <ol>
       <li>
-        First, think about what type of models your computer can run.
-        If you have 16 GB of (video or system) memory, a model should not exceed about 10 GB.
-        Also, if you do not have a dedicated GPU, you should choose a smaller model, since running Large Language Models (LLM) on
-        the CPU will take longer.
-        Further, there are &quot;quantized&quot; models available.
-        Quantized models are smaller than the non-quantized ones, run faster on worse hardware, but with some losses in quality.
-      </li>
-      <li>
         Go to <a href="https://huggingface.co/models?sort=trending&search=gguf">huggingface.co/models</a> and search for &quot;gguf&quot;.
-        GGUF is the supported file extension for models that LocalChat can load.
         Each model consists only of one GGUF-file, you don't need any additional files.
       </li>
       <li>
-        Once you have found a model you would like to use, download it to your computer.
-      </li>
-      <li>
-        Click the button below to open the models directory, and put the model in there. You may
-        need to refresh the window for the app to pick up the changes.
+        Once you have found a model, download it to your computer or paste the link into the download field. Wait until
+        the download finishes. Then you can use the model in your conversations.
       </li>
     </ol>
     </details>
+    <p>
+      Download a new model by pasting its HTTP-URL into this textfield:
+      <input id="model-download-field" type="text" placeholder="https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q2_K.gguf" v-model="modelPath">
+      <button v-on:click="downloadModel">Download</button>
+    </p>
     <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
       <h4>{{ getModelName(model) }}</h4>
       <span class="size">{{ formatSize(model.bytes) }}</span>
@@ -71,6 +63,7 @@ import type { ModelDescriptor } from 'src/main/ModelManager'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
 import { formatSize } from './util/sizes'
+import { ref } from 'vue'
 
 const store = useModelStore()
 
@@ -80,8 +73,14 @@ const emit = defineEmits<{
   (e: 'close-modal'): void
 }>()
 
+const modelPath = ref<string>('')
+
 function openModelDirectory () {
   ipcRenderer.invoke('open-model-directory').catch(err => alertError(err))
+}
+
+function downloadModel () {
+  ipcRenderer.invoke('download-model', modelPath.value).catch(err => alertError(err))
 }
 
 // UTIL
@@ -115,7 +114,7 @@ div#model-manager-modal {
   top: 0px;
   left: 0px;
   right: 0px;
-  bottom: 0px;
+  bottom: var(--footer-height);
   background-color: rgba(230, 230, 230);
   color: rgb(66, 66, 66);
   padding: 20px;
@@ -172,6 +171,12 @@ div.model-card span.context-length,
 div.model-card span.license,
 div.model-card span.author {
   font-family: monospace;
+}
+
+div#model-manager-modal-body  input#model-download-field {
+  display: block;
+  width: 100%;
+  margin: 10px 0px;
 }
 
 @media (prefers-color-scheme: dark) {
