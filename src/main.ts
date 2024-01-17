@@ -3,6 +3,7 @@ import { AppProvider } from './main/AppProvider'
 import path from 'path'
 import fs from 'fs'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
+import { Logger } from './main/Logger'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -13,6 +14,7 @@ if (!app.requestSingleInstanceLock()) {
 
 // Run the pre-boot setup. NOTE: Must run before we instantiate the AppProvider!
 preBootSetup()
+Logger.getLogger() // Init logger now that the paths are correctly set
 const localChat = new AppProvider()
 
 app.whenReady().then(() => {
@@ -21,6 +23,10 @@ app.whenReady().then(() => {
       localChat.boot().catch(err => console.error(err))
     })
     .catch(err => console.error(err))
+})
+
+app.on('will-quit', () => {
+  Logger.getLogger().shutdown() // TODO
 })
 
 app.on('second-instance', (event, argv, cwd) => {

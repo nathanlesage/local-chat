@@ -9,7 +9,7 @@ import {
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
 import path from 'path'
-import fs from 'fs'
+import { promises as fs } from 'fs'
 import { setApplicationMenu } from './util/set-application-menu'
 
 export interface AppNotification {
@@ -22,20 +22,10 @@ export interface AppNotification {
 export class AppProvider {
   private mainWindow: BrowserWindow|undefined
   private showFirstStartGuide: boolean
+  private whenReady: Promise<void>|undefined
 
   constructor () {
-    // FIRST START GUIDE CODE
-    const firstStartFile = path.join(app.getPath('userData'), 'first-start-done')
-    console.log(firstStartFile)
-    if (fs.existsSync(firstStartFile)) {
-      this.showFirstStartGuide = false
-    } else {
-      this.showFirstStartGuide = true
-    }
-
-    // Immediately create the lock file so we don't show the guide again.
-    fs.writeFileSync('first-start-done', 'true')
-
+    this.showFirstStartGuide = false
     ipcMain.handle('should-show-first-start-guide', (event, args) => {
       return this.showFirstStartGuide
     })
@@ -59,10 +49,22 @@ export class AppProvider {
   }
 
   async boot () {
+    await this.checkForFirstStart()
     // Access the Conversation manager to instantiate it
     ConversationManager.getConversationManager()
     setApplicationMenu()
     await this.showMainWindow()
+  }
+
+  async checkForFirstStart () {
+    const firstStartFile = path.join(app.getPath('userData'), 'first-start-done')
+    try {
+      await fs.access(firstStartFile)
+    } catch (err) {
+      this.showFirstStartGuide = true
+      // Immediately create the lock file so we don't show the guide again.
+      await fs.writeFile(firstStartFile, 'true', 'utf-8')
+    }
   }
 
   async showMainWindow () {
