@@ -1,4 +1,6 @@
-import { ipcMain } from 'electron'
+import { ipcMain, app } from 'electron'
+import path from 'path'
+import { promises as fs } from 'fs'
 import type { LlamaChatSession, LlamaModel, LlamaContext, ConversationInteraction, LlamaChatSessionOptions, LlamaModelOptions, LlamaContextOptions } from 'node-llama-cpp'
 import mod from 'node-llama-cpp'
 import { ModelDescriptor } from './ModelManager'
@@ -20,9 +22,9 @@ export const LLAMA_STATUS: Record<string, LlamaStatus> = {
 
 export class LlamaProvider {
   private loadedModel: ModelDescriptor|undefined
+  private lastLoadedConversationHistory: ChatMessage[]
   private session: LlamaChatSession|undefined
   private status: LlamaStatus
-  private lastLoadedConversationHistory: ChatMessage[]
 
   constructor () {
     console.log('Instantiating LlamaProvider')
@@ -38,6 +40,10 @@ export class LlamaProvider {
     ipcMain.handle('get-llama-status', (event) => {
       return this.status
     })
+  }
+
+  private get llamaCache () {
+    return path.join(app.getPath('userData'), 'llama-cache.json')
   }
 
   public getStatus () {
@@ -94,19 +100,30 @@ export class LlamaProvider {
     const resolved = await (mod as any)
     
     console.log(`Loading new model: ${modelDescriptor.name}`)
-    const model: LlamaModel = new resolved.LlamaModel({ modelPath: modelDescriptor.path } as LlamaModelOptions)
-    console.log(`Model ${modelDescriptor.name} loaded. Instantiating new session.`)
+    // const model: LlamaModel = new resolved.LlamaModel({ modelPath: modelDescriptor.path } as LlamaModelOptions)
+    const model: LlamaModel = new resolved.LlamaModel({ modelPath: modelDescriptor.path })
+    console.log(`Model ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}. Instantiating new session.`)
+
+    const context: LlamaContext = new resolved.LlamaContext({
+        model,
+        contextSize: Math.min(2048, model.trainContextSize)
+    } as LlamaContextOptions)
 
     this.session = new resolved.LlamaChatSession({
-      context: new resolved.LlamaContext({
-        model,
-        // BUG: https://github.com/withcatai/node-llama-cpp/issues/129
-        // Allegedly gone with v3.0.0.
-        batchSize: 2048, // Must be the context size of the loaded model
-        contextSize: 2048 // Must be the context size of the loaded model
-      } as LlamaContextOptions),
-      conversationHistory: this.convertConversationMessages(previousConversation)
+        contextSequence: context.getSequence(),
+        conversationHistory: this.convertConversationMessages(previousConversation)
     } as LlamaChatSessionOptions)
+
+    // this.session = new resolved.LlamaChatSession({
+    //   context: new resolved.LlamaContext({
+    //     model,
+    //     // BUG: https://github.com/withcatai/node-llama-cpp/issues/129
+    //     // Allegedly gone with v3.0.0.
+    //     batchSize: 2048, // Must be the context size of the loaded model
+    //     contextSize: 2048 // Must be the context size of the loaded model
+    //   } as LlamaContextOptions),
+    //   conversationHistory: this.convertConversationMessages(previousConversation)
+    // } as LlamaChatSessionOptions)
 
     console.log('Session initialized. LlamaProvider ready.')
 
@@ -126,7 +143,8 @@ export class LlamaProvider {
     const answer = await this.session.prompt(message, {
       onToken: (chunk) => {
         if (onToken !== undefined && this.session !== undefined) {
-          const decoded = this.session.context.decode(chunk)
+          // const decoded = this.session.context.decode(chunk)
+          const decoded = this.session.model.detokenize(chunk)
           onToken(decoded)
         }
       }

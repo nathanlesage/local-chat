@@ -6,12 +6,13 @@
       v-bind:value="model.path"
       v-bind:selected="model.path === store.currentModel?.path"
     >
-      {{ model.name }} ({{ formatSize(model.bytes) }})
+      {{ getModelName(model) }} ({{ formatSize(model.bytes) }})
     </option>
   </select>
 </template>
 
 <script setup lang="ts">
+import type { ModelDescriptor } from 'src/main/ModelManager'
 import { useModelStore } from './pinia/models'
 import { formatSize } from './util/sizes'
 
@@ -26,6 +27,14 @@ function selectModel (event: Event) {
     const modelToSelect = target.value
 
     emit('select-model', modelToSelect)
+  }
+}
+
+function getModelName (model: ModelDescriptor) {
+  if (model.metadata?.general.name === undefined) {
+    return model.name
+  } else {
+    return model.metadata.general.name
   }
 }
 

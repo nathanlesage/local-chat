@@ -1,6 +1,8 @@
 import { app, ipcMain, shell } from 'electron'
 import path from 'path'
+import gguf from 'gguf'
 import { promises as fs } from 'fs'
+import type { GGUFMetadata } from 'gguf/dist/metadataTypes'
 
 export interface ModelDescriptor {
   /**
@@ -15,6 +17,11 @@ export interface ModelDescriptor {
    * The size of the model on disk, in bytes
    */
   bytes: number
+  /**
+   * GGUF file metadata, inclues, e.g., quantization level and such. Should
+   * normally be available, but there could be errors.
+   */
+  metadata: GGUFMetadata
 }
 
 
@@ -67,6 +74,16 @@ export class ModelManager {
     return models.find(m => m.path === modelId)
   }
 
+  private async getModelMetadata (modelPath: string) {
+    const result = await gguf(modelPath)
+    
+    if (result.error !== undefined) {
+      return undefined
+    } else {
+      return result.metadata
+    }
+  }
+
   // async downloadModel (modelLocation: string) {}
 
   async getAvailableModels (): Promise<ModelDescriptor[]> {
@@ -80,8 +97,18 @@ export class ModelManager {
       const stat = await fs.stat(fullPath)
 
       if (SUPPORTED_MODEL_TYPES.includes(ext)) {
+        const metadata = await this.getModelMetadata(fullPath)
+        if (metadata === undefined) {
+          // There seems to have been an error parsing the model metadata
+          console.warn(`Could not extract metadata from model ${basename}. This can indicate a corrupted file.`)
+          continue
+        }
+
         availableModels.push({
-          path: fullPath, name: basename, bytes: stat.size
+          path: fullPath,
+          name: basename,
+          bytes: stat.size,
+          metadata
         })
       }
     }
