@@ -41,12 +41,12 @@
     <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
       <h4>{{ getModelName(model) }}</h4>
       <span class="size">{{ formatSize(model.bytes) }}</span>
-      <span class="architecture">Architecture: {{ model.metadata.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
+      <span class="architecture">Architecture: {{ model.metadata?.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
       <span class="context-length">Context length: {{ getContextLength(model) }}</span>
 
-      <p class="description">{{ model.metadata.general.description ?? 'No description' }}</p>
-      <span class="author">{{ model.metadata.general.author ?? 'Unknown author' }}</span>
-      <span class="license">License: {{ model.metadata.general.license ?? 'Unknown' }}</span>
+      <p class="description">{{ model.metadata?.general.description ?? 'No description' }}</p>
+      <span class="author">{{ model.metadata?.general.author ?? 'Unknown author' }}</span>
+      <span class="license">License: {{ model.metadata?.general.license ?? 'Unknown' }}</span>
     </div>
     <p v-else>
       No models found, or the app is currently discovering them.
@@ -85,7 +85,7 @@ function downloadModel () {
 
 // UTIL
 function getModelName (model: ModelDescriptor) {
-  if (model.metadata.general.name === undefined) {
+  if (model.metadata?.general.name === undefined) {
     return model.name
   } else {
     return model.metadata.general.name
@@ -93,11 +93,15 @@ function getModelName (model: ModelDescriptor) {
 }
 
 function isQuantized (model: ModelDescriptor) {
-  return model.metadata.general.quantization_version !== undefined
+  return model.metadata?.general.quantization_version !== undefined
 }
 
 function getContextLength (model: ModelDescriptor) {
-  const arch = model.metadata.general.architecture
+  if (model.metadata === undefined) {
+    return 'Unknown'
+  }
+
+  const arch = model.metadata?.general.architecture
   if (arch in model.metadata) {
     // @ts-expect-error
     return model.metadata[arch].context_length

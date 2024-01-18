@@ -23,7 +23,7 @@ export interface ModelDescriptor {
    * GGUF file metadata, inclues, e.g., quantization level and such. Should
    * normally be available, but there could be errors.
    */
-  metadata: GGUFMetadata
+  metadata?: GGUFMetadata
 }
 
 export interface ModelDownloadStatus {
@@ -75,6 +75,7 @@ export class ModelManager {
   private static thisInstance: ModelManager
   private downloadStatus: ModelDownloadStatus
   private downloadCancelFlag: boolean
+  private modelMetadataCache: Map<string, GGUFMetadata>
 
   private constructor () {
     this.downloadCancelFlag = false
@@ -87,6 +88,8 @@ export class ModelManager {
       eta_seconds: 0,
       bytes_per_second: 0
     }
+
+    this.modelMetadataCache = new Map()
 
     // RETURNS: modelName[]
     ipcMain.handle('get-available-models', async (event, args) => {
@@ -240,19 +243,33 @@ export class ModelManager {
       const stat = await fs.stat(fullPath)
 
       if (SUPPORTED_MODEL_TYPES.includes(ext)) {
-        const metadata = await this.getModelMetadata(fullPath)
-        if (metadata === undefined) {
-          // There seems to have been an error parsing the model metadata
-          console.warn(`Could not extract metadata from model ${basename}. This can indicate a corrupted file.`)
-          continue
-        }
-
-        availableModels.push({
+        const metadata = this.modelMetadataCache.get(fullPath)
+        const model = {
           path: fullPath,
           name: basename,
           bytes: stat.size,
           metadata
-        })
+        }
+
+        // If the metadata is not found, fetch it asynchronously to not block the
+        // call too much
+        if (metadata === undefined) {
+          this.getModelMetadata(fullPath)
+            .then(metadata => {
+              if (metadata === undefined) {
+                console.error(`Could not retrieve metadata for model ${basename}`)
+                return
+              }
+
+              model.metadata = metadata
+              this.modelMetadataCache.set(fullPath, metadata)
+              this.getAvailableModels()
+                .then(models => { broadcastIPCMessage('available-models-updated', models) }) // TODO: Implement
+            })
+            .catch(err => console.error(err))
+        }
+
+        availableModels.push(model)
       }
     }
 
