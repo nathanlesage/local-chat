@@ -51,9 +51,6 @@ jobs:
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
       - name: Package & Release
         run: yarn package:win-x64 && yarn release:win-x64
-        env:
-          CSC_LINK: ${{ secrets.WIN_CERT_2025_03_15 }}
-          CSC_KEY_PASSWORD: ${{ secrets.WIN_CERT_PASS_2025_03_15 }}
       - name: Cache installer
         uses: actions/upload-artifact@v3
         with:
@@ -87,18 +84,8 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
-      # Save the macOS certificate on this runner for forge to access it in the
-      # next step below.
-      - name: Retrieve code signing certificate
-        run: ./scripts/add-osx-cert.sh
-        env:
-          MACOS_CERT: ${{ secrets.MACOS_CERT }}
-          MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-x64
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-x64
       - name: Cache image file
@@ -106,7 +93,7 @@ jobs:
         with:
           name: darwin_x64
           path: |
-            ./release/LocalChat-${{env.version}}-x64.dmg
+            ./out/make/LocalChat-${{env.version}}-x64.dmg
 
   build_macos_arm64:
     name: macOS (arm64)
@@ -128,18 +115,8 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
-      # Save the macOS certificate on this runner for forge to access it in the
-      # next step below.
-      - name: Retrieve code signing certificate
-        run: ./scripts/add-osx-cert.sh
-        env:
-          MACOS_CERT: ${{ secrets.MACOS_CERT }}
-          MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-arm
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-arm
       - name: Cache image file
@@ -147,7 +124,7 @@ jobs:
         with:
           name: darwin_arm64
           path: |
-            ./release/LocalChat-${{env.version}}-arm64.dmg
+            ./out/make/LocalChat-${{env.version}}-arm64.dmg
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
@@ -184,9 +161,8 @@ jobs:
         with:
           name: linux_x64
           path: |
-            ./release/LocalChat-${{env.version}}-amd64.deb
-            ./release/LocalChat-${{env.version}}-x86_64.rpm
-            ./release/LocalChat-${{env.version}}-x86_64.AppImage
+            ./out/make/LocalChat-${{env.version}}-amd64.deb
+            ./out/make/LocalChat-${{env.version}}-x86_64.rpm
 
   build_linux_arm64:
     name: Linux (arm64)
@@ -293,8 +269,6 @@ jobs:
           sha256sum "LocalChat-${{env.version}}-x64.exe" > "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-x64.dmg" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-arm64.dmg" >> "SHA256SUMS.txt"
-          sha256sum "LocalChat-${{env.version}}-x86_64.AppImage" >> "SHA256SUMS.txt"
-          sha256sum "LocalChat-${{env.version}}-arm64.AppImage" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-amd64.deb" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-arm64.deb" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-x86_64.rpm" >> "SHA256SUMS.txt"
@@ -322,13 +296,10 @@ jobs:
           # Gosh, is that convenient as opposed to earlier!
           files: |
             ./release/LocalChat-${{env.version}}-x64.exe
-            ./release/LocalChat-${{env.version}}-arm64.exe
             ./release/LocalChat-${{env.version}}-x64.dmg
             ./release/LocalChat-${{env.version}}-arm64.dmg
             ./release/LocalChat-${{env.version}}-amd64.deb
             ./release/LocalChat-${{env.version}}-arm64.deb
             ./release/LocalChat-${{env.version}}-x86_64.rpm
             ./release/LocalChat-${{env.version}}-aarch64.rpm
-            ./release/LocalChat-${{env.version}}-x86_64.AppImage
-            ./release/LocalChat-${{env.version}}-arm64.AppImage
             ./release/SHA256SUMS.txt

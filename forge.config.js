@@ -17,30 +17,7 @@ module.exports = {
     darwinDarkModeSupport: 'true',
     // Electron-forge automatically adds the file extension based on OS
     icon: './static/icon',
-    name: 'LocalChat',
-    // The certificate is written to the default keychain during CI build.
-    // See ./scripts/add-osx-cert.sh
-    // osxSign: {
-    //   identity: 'Developer ID Application: Hendrik Erz (QS52BN8W68)',
-    //   'hardened-runtime': true,
-    //   'gatekeeper-assess': false,
-    //   entitlements: 'scripts/assets/entitlements.plist',
-    //   'entitlements-inherit': 'scripts/assets/entitlements.plist',
-    //   'signature-flags': 'library'
-    // },
-    // Since electron-notarize 1.1.0 it will throw instead of simply print a
-    // warning to the console, so we have to actively check if we should
-    // notarize or not. We do so by checking for the necessary environment
-    // variables and set the osxNotarize option to false otherwise to prevent
-    // notarization.
-    osxNotarize: ('APPLE_ID' in process.env && 'APPLE_ID_PASS' in process.env)
-      ? {
-          tool: 'notarytool',
-          appleId: process.env.APPLE_ID,
-          appleIdPassword: process.env.APPLE_ID_PASS,
-          teamId: 'QS52BN8W68'
-        }
-      : false
+    name: 'LocalChat'
   },
   plugins: [
     {
@@ -66,5 +43,22 @@ module.exports = {
       }
     }
   ],
-  makers: [] // TODO
+  makers: [
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {}
+    },
+    {
+      name: '@electron-forge/maker-wix',
+      config: {}
+    },
+    {
+      name: '@electron-forge/maker-deb',
+      config: {}
+    },
+    {
+      name: '@electron-forge/maker-rpm',
+      config: {}
+    }
+  ] // TODO
 }

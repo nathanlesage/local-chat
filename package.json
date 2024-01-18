@@ -13,10 +13,19 @@
     "package:mac-arm": "npm_config_arch=arm64 electron-forge package --platform=darwin --arch=arm64",
     "package:win-x64": "npm_config_arch=x64 electron-forge package --platform=win32 --arch=x64",
     "package:linux-x64": "npm_config_arch=x64 electron-forge package --platform=linux --arch=x64",
-    "package:linux-arm": "npm_config_arch=arm64 electron-forge package --platform=linux --arch=arm64"
+    "package:linux-arm": "npm_config_arch=arm64 electron-forge package --platform=linux --arch=arm64",
+    "release:mac-x64": "npm_config_arch=x64 electron-forge make --platform=darwin --arch=x64",
+    "release:mac-arm": "npm_config_arch=arm64 electron-forge make --platform=darwin --arch=arm64",
+    "release:win-x64": "npm_config_arch=x64 electron-forge make --platform=win32 --arch=x64",
+    "release:linux-x64": "npm_config_arch=x64 electron-forge make --platform=linux --arch=x64",
+    "release:linux-arm": "npm_config_arch=arm64 electron-forge make --platform=linux --arch=arm64"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-dmg": "^7.2.0",
+    "@electron-forge/maker-rpm": "^7.2.0",
+    "@electron-forge/maker-wix": "^7.2.0",
     "@electron-forge/plugin-webpack": "^7.2.0",
     "@types/luxon": "^3.4.0",
     "@types/showdown": "^2.0.6",
