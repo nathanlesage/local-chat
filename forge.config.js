@@ -59,9 +59,11 @@ module.exports = {
       name: '@electron-forge/maker-deb',
       config: {}
     },
-    {
-      name: '@electron-forge/maker-rpm',
-      config: {}
-    }
-  ] // TODO
+    // BUG: The rpm builder doesn't like the fact that there are binaries with
+    // the wrong architecture on x64
+    // {
+    //   name: '@electron-forge/maker-rpm',
+    //   config: {}
+    // }
+  ]
 }
