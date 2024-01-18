@@ -49,8 +49,11 @@ module.exports = {
       config: {}
     },
     {
-      name: '@electron-forge/maker-wix',
-      config: {}
+      name: '@electron-forge/maker-squirrel',
+      config: {
+        authors: 'Hendrik Erz',
+        description: 'LocalChat is your personal assistant: An LLM running locally on your computer.'
+      }
     },
     {
       name: '@electron-forge/maker-deb',
