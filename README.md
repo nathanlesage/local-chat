@@ -10,7 +10,7 @@
   <a href="#configurationsystem-prompt">Configuration</a>
 </p>
 
-![An impression of LocalChat running locally on Firefox](./screenshot.png)
+![An impression of LocalChat running OpenOrca Mistral 7b quantized](./static/screenshot.png)
 
 ## Overview
 
