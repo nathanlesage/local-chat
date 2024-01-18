@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { DateTime, Duration } from 'luxon'
 
 /**
  * Formats a date (must be provided as JavaScript Date number in milliseconds)
@@ -23,4 +23,16 @@ export function formatDate (date: number, type: 'date'|'time'|'datetime', relati
   } else {
     return dt.toLocaleString({ timeStyle: 'short', dateStyle: 'short' })
   }
+}
+
+/**
+ * Formats an amount of seconds into a user-readable string of format mm:ss.
+ *
+ * @param   {number}  sec  The seconds to format
+ *
+ * @return  {string}       The formatted number of seconds.
+ */
+export function formatSeconds (sec: number): string {
+  const duration = Duration.fromObject({ seconds: sec })
+  return duration.toFormat('mm:ss')
 }

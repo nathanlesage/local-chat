@@ -8,50 +8,69 @@
     <h1>Model Manager</h1>
     <div id="model-manager-modal-body">
       <details>
-      <summary>Usage</summary>
+        <summary>Usage</summary>
+        <p>
+          LocalChat works with a variety of models that can perform differently
+          depending on your use-case. There are coding models, general assistant
+          models, and others.
+        </p>
+        <p>
+          To download a new model, you can either manually download it and move it
+          to the model directory, or paste the link into the text field below to
+          have LocalChat automatically download it for you. The model must be in
+          the GGUF file format.
+        </p>
+        <p>To find new models, follow these steps:</p>
+        <ol>
+          <li>
+            Go to <a href="https://huggingface.co/models?sort=trending&search=gguf">huggingface.co/models</a> and search for &quot;gguf&quot;.
+            Each model consists only of one GGUF-file, you don't need any additional files.
+          </li>
+          <li>
+            Once you have found a model, download it to your computer or paste the link into the download field. Wait until
+            the download finishes. Then you can use the model in your conversations.
+          </li>
+        </ol>
+      </details>
 
-      <p>
-        LocalChat works with a variety of models that can perform differently
-        depending on your use-case. There are coding models, general assistant
-        models, and others.
+      <h2>Download new models</h2>
+      <p v-if="!store.modelDownloadStatus.isDownloading">
+        Download a new model by pasting its HTTP-URL into this textfield:
+        <input id="model-download-field" type="text" placeholder="https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q2_K.gguf" v-model="modelPath">
+        <button v-on:click="downloadModel">Download</button>
       </p>
-      <p>
-        To download a new model, you can either manually download it and move it
-        to the model directory, or paste the link into the text field below to
-        have LocalChat automatically download it for you. The model must be in
-        the GGUF file format.
+      <p v-else>
+        <!-- Display download status -->
+        <span>Downloading model &quot;{{ store.modelDownloadStatus.name }}&quot; ({{ formatSize(store.modelDownloadStatus.size_downloaded) }} of {{ formatSize(store.modelDownloadStatus.size_total) }})</span>
+        <div id="model-download-progress-wrapper">
+          <progress
+            min="0"
+            v-bind:max="store.modelDownloadStatus.size_total"
+            v-bind:value="store.modelDownloadStatus.size_downloaded"
+          >Hello!</progress>
+          <span>
+            ({{ formatSize(store.modelDownloadStatus.bytes_per_second) }}/s; {{ formatSeconds(store.modelDownloadStatus.eta_seconds) }})
+          </span>
+          <button class="icon" v-on:click="cancelDownload" v-html="CancelIcon" title="Abort download"></button>
+        </div>
       </p>
-      <p>To find new models, follow these steps:</p>
-      <ol>
-      <li>
-        Go to <a href="https://huggingface.co/models?sort=trending&search=gguf">huggingface.co/models</a> and search for &quot;gguf&quot;.
-        Each model consists only of one GGUF-file, you don't need any additional files.
-      </li>
-      <li>
-        Once you have found a model, download it to your computer or paste the link into the download field. Wait until
-        the download finishes. Then you can use the model in your conversations.
-      </li>
-    </ol>
-    </details>
-    <p>
-      Download a new model by pasting its HTTP-URL into this textfield:
-      <input id="model-download-field" type="text" placeholder="https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q2_K.gguf" v-model="modelPath">
-      <button v-on:click="downloadModel">Download</button>
-    </p>
-    <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
-      <h4>{{ getModelName(model) }}</h4>
-      <span class="size">{{ formatSize(model.bytes) }}</span>
-      <span class="architecture">Architecture: {{ model.metadata?.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
-      <span class="context-length">Context length: {{ getContextLength(model) }}</span>
 
-      <p class="description">{{ model.metadata?.general.description ?? 'No description' }}</p>
-      <span class="author">{{ model.metadata?.general.author ?? 'Unknown author' }}</span>
-      <span class="license">License: {{ model.metadata?.general.license ?? 'Unknown' }}</span>
+      <h2>Available models</h2>
+      <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
+        <h4>{{ getModelName(model) }}</h4>
+        <span class="size">{{ formatSize(model.bytes) }}</span>
+        <span class="architecture">Architecture: {{ model.metadata?.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
+        <span class="context-length">Context length: {{ getContextLength(model) }}</span>
+
+        <p class="description">{{ model.metadata?.general.description ?? 'No description' }}</p>
+        <span class="author">{{ model.metadata?.general.author ?? 'Unknown author' }}</span>
+        <span class="license">License: {{ model.metadata?.general.license ?? 'Unknown' }}</span>
+      </div>
+      <p v-else>
+        No models found
+      </p>
     </div>
-    <p v-else>
-      No models found, or the app is currently discovering them.
-    </p>
-    </div>
+
     <div id="model-manager-modal-footer">
       <button v-on:click="openModelDirectory">Open model directory</button>
     </div>
@@ -62,7 +81,9 @@
 import type { ModelDescriptor } from 'src/main/ModelManager'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
+import CancelIcon from './icons/x.svg'
 import { formatSize } from './util/sizes'
+import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 
 const store = useModelStore()
@@ -109,6 +130,10 @@ function getContextLength (model: ModelDescriptor) {
     return 'Unknown'
   }
 }
+
+function cancelDownload () {
+  ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
+}
 </script>
 
 <style>
@@ -126,6 +151,17 @@ div#model-manager-modal {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+div#model-download-progress-wrapper {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 20px;
+}
+
+div#model-download-progress-wrapper progress {
+  flex-grow: 1;
 }
 
 div#model-manager-modal-body {
