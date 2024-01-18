@@ -5,6 +5,22 @@ import { promises as fs, createWriteStream } from 'fs'
 import type { GGUFMetadata } from 'gguf/dist/metadataTypes'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import got from 'got'
+import { ChatPromptWrapper, getSupportedModelPrompt } from './LlamaProvider'
+import { registerShutdownTask, registerStartupTask } from './util/lifecycle'
+
+export interface ModelConfig {
+  /**
+   * The prompt template to use for this specific model
+   */
+  prompt: ChatPromptWrapper
+  /**
+   * An optional override for the context length. This is crucial for quantized
+   * models where the context length in the metadata still refers to the non-
+   * quantized context length, despite having been cut. This can prevent crashes
+   * when wrong context lengths are provided.
+   */
+  contextLengthOverride?: number
+}
 
 export interface ModelDescriptor {
   /**
@@ -15,6 +31,14 @@ export interface ModelDescriptor {
    * The name (basename w/o extension) of the model
    */
   name: string
+  /**
+   * The last time the file was modified on disk (only relevant for caching)
+   */
+  modtime: number
+  /**
+   * Configuration for the provided model
+   */
+  config: ModelConfig
   /**
    * The size of the model on disk, in bytes
    */
@@ -66,6 +90,8 @@ export interface ModelDownloadStatus {
   bytes_per_second: number
 }
 
+type ModelDataType = { config: [string, ModelConfig][], metadata: [string, GGUFMetadata][] }
+
 // Supported file name extensions for models
 const SUPPORTED_MODEL_TYPES = [
   '.gguf'
@@ -76,9 +102,12 @@ export class ModelManager {
   private downloadStatus: ModelDownloadStatus
   private downloadCancelFlag: boolean
   private modelMetadataCache: Map<string, GGUFMetadata>
+  private modelConfigCache: Map<string, ModelConfig>
 
   private constructor () {
     this.downloadCancelFlag = false
+    this.modelMetadataCache = new Map()
+    this.modelConfigCache = new Map()
     this.downloadStatus = {
       isDownloading: false,
       name: '',
@@ -89,9 +118,20 @@ export class ModelManager {
       bytes_per_second: 0
     }
 
-    this.modelMetadataCache = new Map()
+    // Immediately begin loading the cached data
+    registerStartupTask(async () => {
+      const { config, metadata } = await this.loadModelConfig()
+      this.modelConfigCache = new Map(config)
+      this.modelMetadataCache = new Map(metadata)
+      // Ensure the provider now picks up all provided configs/metadata
+      this.getAvailableModels()
+        .then(models => { broadcastIPCMessage('available-models-updated', models) })
+    })
 
-    // RETURNS: modelName[]
+    registerShutdownTask(async () => {
+      await this.persistModelConfig()
+    })
+
     ipcMain.handle('get-available-models', async (event, args) => {
       return await this.getAvailableModels()
     })
@@ -121,6 +161,28 @@ export class ModelManager {
     }
   }
 
+  private async persistModelConfig () {
+    const data: ModelDataType = {
+      config: [...this.modelConfigCache.entries()],
+      metadata: [...this.modelMetadataCache.entries()]
+    }
+    await fs.writeFile(
+      this.modelCache,
+      JSON.stringify(data, undefined, '  '),
+      'utf-8'
+    )
+  }
+
+  private async loadModelConfig (): Promise<ModelDataType> {
+    try {
+      await fs.access(this.modelCache)
+      const data = await fs.readFile(this.modelCache, 'utf-8')
+      return JSON.parse(data)
+    } catch (err) {
+      return { config: [], metadata: [] }
+    }
+  }
+
   public static getModelManager () {
     if (this.thisInstance === undefined) {
       this.thisInstance = new ModelManager()
@@ -131,6 +193,10 @@ export class ModelManager {
 
   private get modelDirectory (): string {
     return path.join(app.getPath('userData'), 'models')
+  }
+
+  private get modelCache (): string {
+    return path.join(app.getPath('userData'), 'model-config.json')
   }
 
   public async modelAvailable (modelId: string): Promise<boolean> {
@@ -232,45 +298,57 @@ export class ModelManager {
     })
   }
 
-  async getAvailableModels (): Promise<ModelDescriptor[]> {
+  public async getAvailableModels (): Promise<ModelDescriptor[]> {
     await this.ensureModelDirectory()
-
     const availableModels: ModelDescriptor[] = []
+
     for (const file of await fs.readdir(this.modelDirectory)) {
       const ext = path.extname(file)
       const basename = path.basename(file, ext)
       const fullPath = path.join(this.modelDirectory, file)
       const stat = await fs.stat(fullPath)
 
-      if (SUPPORTED_MODEL_TYPES.includes(ext)) {
-        const metadata = this.modelMetadataCache.get(fullPath)
-        const model = {
-          path: fullPath,
-          name: basename,
-          bytes: stat.size,
-          metadata
-        }
-
-        // If the metadata is not found, fetch it asynchronously to not block the
-        // call too much
-        if (metadata === undefined) {
-          this.getModelMetadata(fullPath)
-            .then(metadata => {
-              if (metadata === undefined) {
-                console.error(`Could not retrieve metadata for model ${basename}`)
-                return
-              }
-
-              model.metadata = metadata
-              this.modelMetadataCache.set(fullPath, metadata)
-              this.getAvailableModels()
-                .then(models => { broadcastIPCMessage('available-models-updated', models) }) // TODO: Implement
-            })
-            .catch(err => console.error(err))
-        }
-
-        availableModels.push(model)
+      if (!SUPPORTED_MODEL_TYPES.includes(ext)) {
+        continue
       }
+
+      const metadata = this.modelMetadataCache.get(fullPath)
+      const cachedConfig = this.modelConfigCache.get(fullPath)
+      const defaultConfig: ModelConfig = {
+        prompt: 'auto'
+      }
+
+      const model: ModelDescriptor = {
+        path: fullPath,
+        name: basename,
+        modtime: stat.mtimeMs,
+        config: cachedConfig ?? defaultConfig,
+        bytes: stat.size,
+        metadata
+      }
+
+      // Whichever is the current config, set it.
+      this.modelConfigCache.set(fullPath, model.config)
+
+      // If the metadata is not found, fetch it asynchronously to not block the
+      // call too much
+      if (metadata === undefined) {
+        this.getModelMetadata(fullPath)
+          .then(metadata => {
+            if (metadata === undefined) {
+              console.error(`Could not retrieve metadata for model ${basename}`)
+              return
+            }
+
+            model.metadata = metadata
+            this.modelMetadataCache.set(fullPath, metadata)
+            this.getAvailableModels()
+              .then(models => { broadcastIPCMessage('available-models-updated', models) })
+          })
+          .catch(err => console.error(err))
+      }
+
+      availableModels.push(model)
     }
 
     return availableModels

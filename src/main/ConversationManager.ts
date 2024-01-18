@@ -5,6 +5,7 @@ import { app, ipcMain, dialog } from 'electron'
 import { LlamaProvider } from "./LlamaProvider"
 import path from 'path'
 import { promises as fs } from 'fs'
+import { registerShutdownTask, registerStartupTask } from "./util/lifecycle"
 
 export interface ChatMessage {
   role: 'user'|'assistant'
@@ -27,22 +28,23 @@ export class ConversationManager {
   private activeConversation: string|undefined
   private modelManager: ModelManager
   private llamaProvider: LlamaProvider
-  private readyToShutdown: boolean
 
   private constructor () {
     this.conversations = []
     this.modelManager = ModelManager.getModelManager()
     this.llamaProvider = new LlamaProvider()
-    this.readyToShutdown = true
 
     // Immediately begin loading the conversations from disk
-    this.loadConversations().then(conv => {
-      this.conversations = conv
+    registerStartupTask(async () => {
+      this.conversations = await this.loadConversations()
       console.log(`Restored ${this.conversations.length} conversations.`)
-      broadcastIPCMessage('conversations-updated', this.conversations)
       if (this.conversations.length > 0) {
         this.selectConversation(this.conversations[0].id)
       }
+    })
+
+    registerShutdownTask(async () => {
+      this.persistConversations()
     })
 
     ipcMain.handle('get-conversation', async (event, args) => {
@@ -140,26 +142,6 @@ export class ConversationManager {
 
       this.updateConversation(conversation, false)
     })
-
-    // APP LISTENERS
-
-    app.on('window-all-closed', (event: any) => {
-      if (this.readyToShutdown) {
-        return
-      }
-
-      event.preventDefault()
-      this.persistConversations().finally(app.quit)
-    })
-
-    app.on('will-quit', (event) => {
-      if (this.readyToShutdown) {
-        return
-      }
-
-      event.preventDefault()
-      this.persistConversations().finally(app.quit)
-    })
   }
 
   private get conversationCache () {
@@ -167,14 +149,11 @@ export class ConversationManager {
   }
 
   private async persistConversations () {
-    console.log(`Persisting ${this.conversations.length} conversations ...`)
     await fs.writeFile(
       this.conversationCache,
       JSON.stringify(this.conversations, undefined, '  '),
       'utf-8'
     )
-
-    this.readyToShutdown = true
   }
 
   private async loadConversations (): Promise<Conversation[]> {
@@ -204,7 +183,6 @@ export class ConversationManager {
       messages: []
     }
     this.conversations.push(newConversation)
-    this.readyToShutdown = false
     broadcastIPCMessage('conversations-updated', this.conversations)
 
     if (setAsActive) {
@@ -243,7 +221,6 @@ export class ConversationManager {
     if (oldIndex > -1) {
       this.conversations.splice(oldIndex, 1, update)
       broadcastIPCMessage('conversation-updated', update)
-      this.readyToShutdown = false
       // Also load the appropriate model
       if (reloadModel) {
         this.llamaProvider.loadModel(update.model, update.messages)
@@ -270,7 +247,6 @@ export class ConversationManager {
     }
 
     this.conversations.splice(idx, 1)
-    this.readyToShutdown = false
     broadcastIPCMessage('conversations-updated', this.conversations)
   }
 

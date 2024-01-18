@@ -1,7 +1,18 @@
-import { ipcMain, app } from 'electron'
-import path from 'path'
-import { promises as fs } from 'fs'
-import type { LlamaChatSession, LlamaModel, LlamaContext, ConversationInteraction, LlamaChatSessionOptions, LlamaModelOptions, LlamaContextOptions } from 'node-llama-cpp'
+import { ipcMain } from 'electron'
+import type {
+  LlamaChatSession,
+  LlamaModel,
+  LlamaContext,
+  ConversationInteraction,
+  LlamaChatSessionOptions,
+  LlamaContextOptions,
+  LlamaModelOptions,
+  ChatMLChatPromptWrapper,
+  FalconChatPromptWrapper,
+  GeneralChatPromptWrapper,
+  LlamaChatPromptWrapper,
+  EmptyChatPromptWrapper
+} from 'node-llama-cpp'
 import mod from 'node-llama-cpp'
 import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
@@ -10,6 +21,24 @@ import { ChatMessage } from './ConversationManager'
 export interface LlamaStatus {
   status: 'uninitialized'|'ready'|'loading'|'generating'|'error'
   message: string
+}
+
+export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
+export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
+  switch (prompt) {
+    case 'llama':
+      return 'llama'
+    case 'chatml':
+      return 'chatml'
+    case 'falcon':
+      return 'falcon'
+    case 'general':
+      return 'general'
+    case 'empty':
+      return 'empty'
+    default:
+      return 'auto'
+  }
 }
 
 export const LLAMA_STATUS: Record<string, LlamaStatus> = {
@@ -40,10 +69,6 @@ export class LlamaProvider {
     ipcMain.handle('get-llama-status', (event) => {
       return this.status
     })
-  }
-
-  private get llamaCache () {
-    return path.join(app.getPath('userData'), 'llama-cache.json')
   }
 
   public getStatus () {
@@ -98,23 +123,48 @@ export class LlamaProvider {
     this.setStatus(LLAMA_STATUS.loadingModel)
     
     const resolved = await (mod as any)
+
+    let chatTemplate: GeneralChatPromptWrapper|LlamaChatPromptWrapper|ChatMLChatPromptWrapper|FalconChatPromptWrapper|'auto' = 'auto'
+    switch (modelDescriptor.config.prompt) {
+      case 'llama':
+        chatTemplate = new resolved.LlamaChatPromptWrapper()
+        break
+      case 'chatml':
+        chatTemplate = new resolved.ChatMLChatPromptWrapper()
+        break
+      case 'falcon':
+        chatTemplate = new resolved.FalconChatPromptWrapper()
+        break
+      case 'general':
+        chatTemplate = new resolved.GeneralChatPromptWrapper()
+        break
+      case 'empty':
+        chatTemplate = new resolved.EmptyChatPromptWrapper()
+        break
+      case 'auto':
+        chatTemplate = 'auto'
+        break
+    }
     
     console.log(`Loading new model: ${modelDescriptor.name}`)
-    // const model: LlamaModel = new resolved.LlamaModel({ modelPath: modelDescriptor.path } as LlamaModelOptions)
-    const model: LlamaModel = new resolved.LlamaModel({ modelPath: modelDescriptor.path })
+    const model: LlamaModel = new resolved.LlamaModel({
+      modelPath: modelDescriptor.path
+    } as LlamaModelOptions)
     console.log(`Model ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}. Instantiating new session.`)
 
     const context: LlamaContext = new resolved.LlamaContext({
         model,
+        // TODO: contextSize: Math.min(modelDescriptor.config.contextLengthOverride ?? Infinity, Math.max(2048, model.trainContextSize))
         contextSize: Math.min(2048, model.trainContextSize)
     } as LlamaContextOptions)
 
     this.session = new resolved.LlamaChatSession({
         contextSequence: context.getSequence(),
-        conversationHistory: this.convertConversationMessages(previousConversation)
+        conversationHistory: this.convertConversationMessages(previousConversation),
+        promptWrapper: chatTemplate
     } as LlamaChatSessionOptions)
 
-    console.log('Session initialized. LlamaProvider ready.')
+    console.log(`Session initialized with ${previousConversation.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.`)
 
     this.loadedModel = modelDescriptor
 
