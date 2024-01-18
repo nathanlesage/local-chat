@@ -50,7 +50,9 @@ jobs:
       - name: Package & Release
         run: yarn package:win-x64 && yarn release:win-x64
       - name: Inspect out dir
-        run: ls -al ./out/make/squirrel.windows
+        run: |
+          ls -al ./out/make/squirrel.windows
+          lis -al ./out/make
       - name: Cache installer
         uses: actions/upload-artifact@v3
         with:
