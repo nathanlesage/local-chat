@@ -9,16 +9,16 @@
   "scripts": {
     "start": "NODE_ENV=develop electron-forge start",
     "package": "electron-forge package",
-    "package:mac-x64": "cross-env npm_config_arch=x64 electron-forge package --platform=darwin --arch=x64",
-    "package:mac-arm": "cross-env npm_config_arch=arm64 electron-forge package --platform=darwin --arch=arm64",
-    "package:win-x64": "cross-env npm_config_arch=x64 electron-forge package --platform=win32 --arch=x64",
-    "package:linux-x64": "cross-env npm_config_arch=x64 electron-forge package --platform=linux --arch=x64",
-    "package:linux-arm": "cross-env npm_config_arch=arm64 electron-forge package --platform=linux --arch=arm64",
-    "release:mac-x64": "cross-env npm_config_arch=x64 electron-forge make --platform=darwin --arch=x64",
-    "release:mac-arm": "cross-env npm_config_arch=arm64 electron-forge make --platform=darwin --arch=arm64",
-    "release:win-x64": "cross-env npm_config_arch=x64 electron-forge make --platform=win32 --arch=x64",
-    "release:linux-x64": "cross-env npm_config_arch=x64 electron-forge make --platform=linux --arch=x64",
-    "release:linux-arm": "cross-env npm_config_arch=arm64 electron-forge make --platform=linux --arch=arm64"
+    "package:mac-x64": "electron-forge package --platform=darwin --arch=x64",
+    "package:mac-arm": "electron-forge package --platform=darwin --arch=arm64",
+    "package:win-x64": "electron-forge package --platform=win32 --arch=x64",
+    "package:linux-x64": "electron-forge package --platform=linux --arch=x64",
+    "package:linux-arm": "electron-forge package --platform=linux --arch=arm64",
+    "release:mac-x64": "electron-forge make --platform=darwin --arch=x64",
+    "release:mac-arm": "electron-forge make --platform=darwin --arch=arm64",
+    "release:win-x64": "electron-forge make --platform=win32 --arch=x64",
+    "release:linux-x64": "electron-forge make --platform=linux --arch=x64",
+    "release:linux-arm": "electron-forge make --platform=linux --arch=arm64"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",
