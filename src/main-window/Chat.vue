@@ -50,9 +50,12 @@
           autofocus
         ></textarea>
 
-        <button id="send" v-on:click.prevent="prompt" v-html="SendIcon"></button>
+        <div id="chat-button-wrapper">
+          <button id="send" class="icon" v-on:click.prevent="prompt" v-html="SendIcon"></button>
+          <button v-on:click.prevent="exportConversation">Export conversation</button>
+        </div>
 
-        <button v-on:click.prevent="exportConversation">Export conversation</button>
+
       </template>
       <p v-else>
         Create a new conversation to get started.
@@ -203,6 +206,11 @@ textarea#prompt {
   padding: 8px;
   resize: vertical;
   font-family: inherit;
+}
+
+#chat-button-wrapper {
+  display: flex;
+  justify-content: flex-start;
 }
 
 button#send {

@@ -60,6 +60,7 @@ aside#conversations {
   grid-area: sidebar;
   background-color: rgb(55, 55, 55);
   padding: 10px;
+  padding-top: 30px; /* NOTE: Accommodate for sidebar toggle */
   color: white;
   overflow-y: auto;
 }

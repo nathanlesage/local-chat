@@ -114,17 +114,6 @@ export class LlamaProvider {
         conversationHistory: this.convertConversationMessages(previousConversation)
     } as LlamaChatSessionOptions)
 
-    // this.session = new resolved.LlamaChatSession({
-    //   context: new resolved.LlamaContext({
-    //     model,
-    //     // BUG: https://github.com/withcatai/node-llama-cpp/issues/129
-    //     // Allegedly gone with v3.0.0.
-    //     batchSize: 2048, // Must be the context size of the loaded model
-    //     contextSize: 2048 // Must be the context size of the loaded model
-    //   } as LlamaContextOptions),
-    //   conversationHistory: this.convertConversationMessages(previousConversation)
-    // } as LlamaChatSessionOptions)
-
     console.log('Session initialized. LlamaProvider ready.')
 
     this.loadedModel = modelDescriptor

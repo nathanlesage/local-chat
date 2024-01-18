@@ -3,8 +3,16 @@
     id="window-content"
     v-on:mouseup="endResizing"
     v-on:mousemove="onResizing"
+    v-bind:class="{ 'sidebar-hidden': !showSidebar }"
   >
-    <Sidebar></Sidebar>
+    <div
+      id="toggle-sidebar"
+      title="Toggle sidebar"
+      v-on:click="toggleSidebar"
+      v-html="MenuIcon"
+    ></div>
+
+    <Sidebar v-show="showSidebar"></Sidebar>
     <Chat></Chat>
     <Statusbar></Statusbar>
     <div id="resizer" v-on:mousedown="beginResizing"></div>
@@ -19,11 +27,13 @@ import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
 import FirstStartGuide from './FirstStartGuide.vue'
+import MenuIcon from './icons/menu.svg'
 import { ref } from 'vue'
 
 const ipcRenderer = window.ipc
 
 const sidebarWidth = ref<string>('200px')
+const showSidebar = ref<boolean>(true)
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
@@ -35,12 +45,15 @@ ipcRenderer.invoke('should-show-first-start-guide')
   })
 
 function beginResizing (event: MouseEvent) {
+  if (!showSidebar.value) {
+    return
+  }
   isResizing.value = true
   lastOffset.value = event.clientX
 }
 
 function onResizing (event: MouseEvent) {
-  if (!isResizing.value) {
+  if (!isResizing.value || !showSidebar.value) {
     return
   }
 
@@ -53,6 +66,10 @@ function onResizing (event: MouseEvent) {
 function endResizing (event: MouseEvent) {
   isResizing.value = false
   lastOffset.value = 0
+}
+
+function toggleSidebar () {
+  showSidebar.value = !showSidebar.value
 }
 
 </script>
@@ -100,6 +117,24 @@ div#app {
   overflow: hidden;
 }
 
+div#toggle-sidebar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+div#toggle-sidebar svg {
+  width: 15px;
+  height: 15px;
+  color: white;
+}
+
 div#window-content {
   display: grid;
   grid-template-areas: "sidebar chat" "statusbar statusbar";
@@ -109,6 +144,11 @@ div#window-content {
   width: 100vw;
   height: 100vh;
   overflow: auto;
+}
+
+div#window-content.sidebar-hidden {
+  grid-template-areas: "chat" "statusbar";
+  grid-template-columns: auto;
 }
 
 div#resizer {
@@ -142,12 +182,29 @@ select, button {
   background-color: rgb(210, 210, 210);
   border: none;
   padding: 4px 10px;
+  margin: 0 5px;
   border-radius: 8px;
+}
+
+button {
+  height: 23px;
+}
+
+button.icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 button svg {
   width: 12px;
   height: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  div#window-content.sidebar-hidden div#toggle-sidebar svg {
+    color: #333;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

@@ -8,8 +8,8 @@
         v-bind:value="modelDownloadStatus.size_downloaded"
         v-bind:title="formatSize(modelDownloadStatus.size_downloaded) + '/' + formatSize(modelDownloadStatus.size_total)"
       ></progress>
-      ({{ formatSeconds(modelDownloadStatus.eta_seconds) }}s remaining)
-      <button v-on:click="cancelDownload">Cancel</button>
+      ({{ formatSeconds(modelDownloadStatus.eta_seconds) }})
+      <button v-on:click="cancelDownload" v-html="CancelIcon"></button>
     </div>
     <!-- Model indication -->
     <div id="llama-status">
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import LoadingSpinner from './icons/loading-spinner.svg'
+import CancelIcon from './icons/x.svg'
 import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/main/LlamaProvider'
 import { alertError } from './util/prompts'

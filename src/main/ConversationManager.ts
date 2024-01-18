@@ -118,7 +118,11 @@ export class ConversationManager {
         generationTime: 0
       })
 
-      this.updateConversation(conversation)
+      // NOTE: We now have a new message, which would prompt the provider to
+      // reload the model, but in this specific instance, we don't want to
+      // reload it. Similar below where we update the conversation with the
+      // result
+      this.updateConversation(conversation, false)
 
       const start = Date.now()
 
@@ -134,7 +138,7 @@ export class ConversationManager {
         generationTime: Date.now() - start
       })
 
-      this.updateConversation(conversation)
+      this.updateConversation(conversation, false)
     })
 
     // APP LISTENERS
@@ -233,7 +237,7 @@ export class ConversationManager {
     return this.conversations.find(c => c.id === conversationId)
   }
 
-  public updateConversation (update: Conversation) {
+  public updateConversation (update: Conversation, reloadModel = true) {
     const oldIndex = this.conversations.findIndex(c => c.id === update.id)
 
     if (oldIndex > -1) {
@@ -241,7 +245,9 @@ export class ConversationManager {
       broadcastIPCMessage('conversation-updated', update)
       this.readyToShutdown = false
       // Also load the appropriate model
-      this.llamaProvider.loadModel(update.model, update.messages)
+      if (reloadModel) {
+        this.llamaProvider.loadModel(update.model, update.messages)
+      }
     }
   }
 
