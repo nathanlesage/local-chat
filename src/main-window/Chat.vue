@@ -44,11 +44,15 @@
           v-model="message"
           id="prompt"
           name="prompt"
-          placeholder="Type to chat..."
+          placeholder="Type to chat (Shift+Enter to send)"
           v-on:keydown.enter.shift.exact.prevent="prompt"
           v-bind:disabled="isGenerating"
           autofocus
         ></textarea>
+
+        <button id="send" v-on:click.prevent="prompt" v-html="SendIcon"></button>
+
+        <button v-on:click.prevent="exportConversation">Export conversation</button>
       </template>
       <p v-else>
         Create a new conversation to get started.
@@ -62,6 +66,8 @@ import { ref, onUpdated, computed } from 'vue'
 
 import CodeIcon from './icons/code.svg'
 import UserIcon from './icons/user.svg'
+import SendIcon from './icons/send.svg'
+
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
 import { formatDate } from './util/dates'
@@ -69,7 +75,7 @@ import showdown from 'showdown'
 import hljs from 'highlight.js'
 
 import 'highlight.js/styles/atom-one-dark.min.css'
-import type { ChatMessage, Conversation } from 'src/providers/ConversationManager'
+import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
 
@@ -165,6 +171,14 @@ function selectModel (modelPath: string) {
   ipcRenderer.invoke('select-model', modelPath)
     .catch(err => alertError(err))
 }
+
+function exportConversation () {
+  if (currentConversation.value === undefined) {
+    return
+  }
+
+  ipcRenderer.invoke('export-conversation', currentConversation.value.id)
+}
 </script>
 
 <style>
@@ -189,6 +203,11 @@ textarea#prompt {
   padding: 8px;
   resize: vertical;
   font-family: inherit;
+}
+
+button#send {
+  background-color: rgb(95, 155, 216);
+  color: white;
 }
 
 .message {

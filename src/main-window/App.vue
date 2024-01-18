@@ -145,6 +145,11 @@ select, button {
   border-radius: 8px;
 }
 
+button svg {
+  width: 12px;
+  height: 12px;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #222230;

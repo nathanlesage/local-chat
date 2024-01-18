@@ -1,7 +1,7 @@
 import { broadcastIPCMessage } from "./util/broadcast-ipc-message"
 import { ModelDescriptor, ModelManager } from "./ModelManager"
 import { v4 as uuid } from 'uuid'
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, dialog } from 'electron'
 import { LlamaProvider } from "./LlamaProvider"
 import path from 'path'
 import { promises as fs } from 'fs'
@@ -51,6 +51,10 @@ export class ConversationManager {
 
     ipcMain.handle('select-conversation', async (event, args) => {
       return this.selectConversation(args)
+    })
+
+    ipcMain.handle('export-conversation', async (event, args) => {
+      return await this.exportConversation(args)
     })
 
     ipcMain.handle('get-active-conversation', (event, args) => {
@@ -262,5 +266,43 @@ export class ConversationManager {
     this.conversations.splice(idx, 1)
     this.readyToShutdown = false
     broadcastIPCMessage('conversations-updated', this.conversations)
+  }
+
+  public async exportConversation (conversationId: string) {
+    const conv = this.conversations.find(c => c.id === conversationId)
+
+    if (conv === undefined) {
+      throw new Error(`Could not export conversation ${conversationId}: Not found`)
+    }
+
+    // Ask user for path
+    const response = await dialog.showSaveDialog({
+      title: 'Save conversation',
+      defaultPath: app.getPath('documents'),
+      filters: [{ extensions: ['*.md'], name: 'Markdown' }],
+      message: 'Enter a filename'
+    })
+
+    if (response.filePath === undefined) {
+      console.log('User aborted conversation export')
+      return
+    }
+
+    const content: string[] = []
+
+    // conv.
+    const modelName = conv.model.metadata?.general.name ?? conv.model.name
+    content.push(`# Conversation with ${modelName} (${conv.startedAt})`)
+    if (conv.description !== '') {
+      content.push('', conv.description, '')
+    }
+
+    for (const msg of conv.messages) {
+      const messageAuthor = msg.role === 'user' ? 'You' : modelName
+      content.push(`## ${messageAuthor}`)
+      content.push('', msg.content, '')
+    }
+
+    await fs.writeFile(response.filePath, content.join('\n'), 'utf-8')
   }
 }
