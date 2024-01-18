@@ -18,7 +18,7 @@ export interface Conversation {
   id: string
   description: string
   startedAt: number
-  model: ModelDescriptor
+  modelPath: string
   messages: ChatMessage[]
 }
 
@@ -102,7 +102,7 @@ export class ConversationManager {
         return // Cannot select model
       }
 
-      conv.model = model
+      conv.modelPath = model.path
       this.updateConversation(conv)
     })
 
@@ -179,7 +179,7 @@ export class ConversationManager {
       id: uuid(),
       description: '',
       startedAt: Date.now(),
-      model,
+      modelPath: model.path,
       messages: []
     }
     this.conversations.push(newConversation)
@@ -208,7 +208,8 @@ export class ConversationManager {
     this.activeConversation = conv.id
     broadcastIPCMessage('active-conversation-changed', conv.id)
     // Also load the appropriate model
-    this.llamaProvider.loadModel(conv.model, conv.messages)
+    this.modelManager.getModel(conv.modelPath, true)
+      .then(model => this.llamaProvider.loadModel(model, conv.messages))
   }
 
   public getConversation (conversationId?: string): Conversation|undefined {
@@ -223,7 +224,8 @@ export class ConversationManager {
       broadcastIPCMessage('conversation-updated', update)
       // Also load the appropriate model
       if (reloadModel) {
-        this.llamaProvider.loadModel(update.model, update.messages)
+        this.modelManager.getModel(update.modelPath, true)
+          .then(model => this.llamaProvider.loadModel(model, update.messages))
       }
     }
   }
@@ -273,7 +275,8 @@ export class ConversationManager {
     const content: string[] = []
 
     // conv.
-    const modelName = conv.model.metadata?.general.name ?? conv.model.name
+    const model = await this.modelManager.getModel(conv.modelPath)
+    const modelName = model === undefined ? conv.modelPath : model.metadata?.general.name ?? model.name
     content.push(`# Conversation with ${modelName} (${conv.startedAt})`)
     if (conv.description !== '') {
       content.push('', conv.description, '')

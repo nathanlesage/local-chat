@@ -69,6 +69,13 @@ export class LlamaProvider {
     ipcMain.handle('get-llama-status', (event) => {
       return this.status
     })
+
+    ipcMain.handle('force-reload-model', async (event) => {
+      if (this.loadedModel === undefined) {
+        throw new Error('Could not reload model: None loaded.')
+      }
+      return await this.loadModel(this.loadedModel, this.lastLoadedConversationHistory, true)
+    })
   }
 
   public getStatus () {
@@ -111,10 +118,30 @@ export class LlamaProvider {
     return conv
   }
 
-  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = []) {
+  private async getChatTemplateWrapper (prompt: string): Promise<'auto'|ChatPromptWrapper> {
+    console.log(`\x1b[1;31mReturning prompt wrapper for query ${prompt}.\x1b[0m`)
+    const resolved = await (mod as any)
+    switch (prompt) {
+      case 'llama':
+        return new resolved.LlamaChatPromptWrapper()
+      case 'chatml':
+        return new resolved.ChatMLChatPromptWrapper()
+      case 'falcon':
+        return new resolved.FalconChatPromptWrapper()
+      case 'general':
+        return new resolved.GeneralChatPromptWrapper()
+      case 'empty':
+        return new resolved.EmptyChatPromptWrapper()
+      default:
+        return 'auto'
+    }
+  }
+
+  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
     if (
       modelDescriptor.path === this.loadedModel?.path &&
-      JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation)
+      JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation) &&
+      !force // Allow forcefully reloading model, even if nothing else has changed (useful especially for config changes.)
     ) {
       return // Nothing to do
     }
@@ -123,34 +150,12 @@ export class LlamaProvider {
     this.setStatus(LLAMA_STATUS.loadingModel)
     
     const resolved = await (mod as any)
-
-    let chatTemplate: GeneralChatPromptWrapper|LlamaChatPromptWrapper|ChatMLChatPromptWrapper|FalconChatPromptWrapper|'auto' = 'auto'
-    switch (modelDescriptor.config.prompt) {
-      case 'llama':
-        chatTemplate = new resolved.LlamaChatPromptWrapper()
-        break
-      case 'chatml':
-        chatTemplate = new resolved.ChatMLChatPromptWrapper()
-        break
-      case 'falcon':
-        chatTemplate = new resolved.FalconChatPromptWrapper()
-        break
-      case 'general':
-        chatTemplate = new resolved.GeneralChatPromptWrapper()
-        break
-      case 'empty':
-        chatTemplate = new resolved.EmptyChatPromptWrapper()
-        break
-      case 'auto':
-        chatTemplate = 'auto'
-        break
-    }
     
-    console.log(`Loading new model: ${modelDescriptor.name}`)
+    console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
     const model: LlamaModel = new resolved.LlamaModel({
       modelPath: modelDescriptor.path
     } as LlamaModelOptions)
-    console.log(`Model ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}. Instantiating new session.`)
+    console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}. Instantiating new session.\x1b[0m`)
 
     const context: LlamaContext = new resolved.LlamaContext({
         model,
@@ -161,10 +166,10 @@ export class LlamaProvider {
     this.session = new resolved.LlamaChatSession({
         contextSequence: context.getSequence(),
         conversationHistory: this.convertConversationMessages(previousConversation),
-        promptWrapper: chatTemplate
+        promptWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
     } as LlamaChatSessionOptions)
 
-    console.log(`Session initialized with ${previousConversation.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.`)
+    console.log(`\x1b[1;31mSession initialized with ${previousConversation.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
 
     this.loadedModel = modelDescriptor
 
@@ -179,16 +184,31 @@ export class LlamaProvider {
     }
 
     this.setStatus(LLAMA_STATUS.generating)
-    const answer = await this.session.prompt(message, {
-      onToken: (chunk) => {
-        if (onToken !== undefined && this.session !== undefined) {
-          // const decoded = this.session.context.decode(chunk)
-          const decoded = this.session.model.detokenize(chunk)
-          onToken(decoded)
-        }
-      }
-    })
-    this.setStatus(LLAMA_STATUS.ready)
-    return answer
+    const abortController = new AbortController()
+
+    // Abort if the user wishes so
+    const callback = () => { abortController.abort() }
+    ipcMain.on('stop-generating', callback)
+
+    let chunks: string = ''
+    try {
+      const answer = await this.session.prompt(message, {
+        onToken: (chunk) => {
+          if (onToken !== undefined && this.session !== undefined) {
+            const decoded = this.session.model.detokenize(chunk)
+            chunks += decoded
+            onToken(decoded)
+          }
+        },
+        signal: abortController.signal
+      })
+      ipcMain.off('stop-generating', callback)
+      this.setStatus(LLAMA_STATUS.ready)
+      return answer
+    } catch (err) {
+      ipcMain.off('stop-generating', callback)
+      this.setStatus(LLAMA_STATUS.ready)
+      return chunks
+    }
   }
 }

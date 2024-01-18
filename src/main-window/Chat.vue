@@ -52,6 +52,7 @@
 
         <div id="chat-button-wrapper">
           <button id="send" class="icon" v-on:click.prevent="prompt" v-html="SendIcon"></button>
+          <button v-if="isGenerating" v-on:click.prevent="abortGeneration" class="icon" title="Stop generating" v-html="StopIcon"></button>
           <button v-on:click.prevent="exportConversation">Export conversation</button>
         </div>
 
@@ -70,6 +71,7 @@ import { ref, onUpdated, computed } from 'vue'
 import CodeIcon from './icons/code.svg'
 import UserIcon from './icons/user.svg'
 import SendIcon from './icons/send.svg'
+import StopIcon from './icons/stop-circle.svg'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
@@ -81,10 +83,12 @@ import 'highlight.js/styles/atom-one-dark.min.css'
 import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
+import { useModelStore } from './pinia/models'
 
 const converter = new showdown.Converter()
 
 const conversationStore = useConversationStore()
+const modelStore = useModelStore()
 
 const DEFAULT_RESPONSE_TEXT = 'Generating response…'
 
@@ -110,7 +114,7 @@ function messageUser (role: 'user'|'assistant'): string {
   if (role === 'user') {
     return 'You'
   } else {
-    return currentConversation.value?.model.name ?? 'Assistant'
+    return modelStore.currentModel?.name ?? 'Assistant'
   }
 }
 
@@ -168,6 +172,10 @@ function prompt () {
 
   // Immediately clear the value
   message.value = ''
+}
+
+function abortGeneration () {
+  ipcRenderer.send('stop-generating')
 }
 
 function selectModel (modelPath: string) {

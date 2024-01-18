@@ -151,6 +151,15 @@ export class ModelManager {
     ipcMain.handle('cancel-download', (event) => {
       this.downloadCancelFlag = true
     })
+
+    // ipcRenderer.invoke('select-model-prompt-wrapper', { modelPath, value: select.value })
+    ipcMain.handle('select-model-prompt-wrapper', async (event, { modelPath, value }) => {
+      return await this.selectModelPromptWrapper(modelPath, value)
+    })
+
+    ipcMain.handle('force-reload-available-models', async (event) => {
+      return await this.forceReloadAvailableModels()
+    })
   }
 
   private async ensureModelDirectory () {
@@ -204,7 +213,9 @@ export class ModelManager {
     return models.find(m => m.path === modelId) !== undefined
   }
 
-  public async getModel (modelId: string): Promise<ModelDescriptor|undefined> {
+  public async getModel (modelId: string): Promise<ModelDescriptor|undefined>
+  public async getModel (modelId: string, provideFallback: true): Promise<ModelDescriptor>
+  public async getModel (modelId: string, provideFallback?: true): Promise<ModelDescriptor|undefined> {
     const models = await this.getAvailableModels()
     return models.find(m => m.path === modelId)
   }
@@ -350,7 +361,6 @@ export class ModelManager {
 
       availableModels.push(model)
     }
-
     return availableModels
   }
 
@@ -360,5 +370,26 @@ export class ModelManager {
     if (model !== undefined) {
       await fs.rm(model.path)
     }
+  }
+
+  async selectModelPromptWrapper (modelPath: string, prompt: ChatPromptWrapper) {
+    const availableModels = await this.getAvailableModels()
+    const model = availableModels.find(model => model.path === modelPath)
+    if (model !== undefined) {
+      console.log(`Setting prompt template to ${prompt} for model ${model.name}`)
+      model.config.prompt = prompt
+      this.modelConfigCache.set(modelPath, model.config)
+      const models = await this.getAvailableModels()
+      broadcastIPCMessage('available-models-updated', models)
+    }
+  }
+
+
+  public async forceReloadAvailableModels () {
+    // Force reload means: Remove all data, and then re-fetch it. May take a while.
+    this.modelConfigCache.clear()
+    this.modelMetadataCache.clear()
+    const models = await this.getAvailableModels()
+    broadcastIPCMessage('available-models-updated', models)
   }
 }

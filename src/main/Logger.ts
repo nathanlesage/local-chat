@@ -18,7 +18,7 @@ export class Logger {
       stdout: app.isPackaged ? this.stdout : process.stdout,
       stderr: app.isPackaged ? this.stderr : process.stderr,
       ignoreErrors: true, // Only errors when writing to the stream
-      colorMode: false
+      colorMode: 'auto'
     })
 
     // Overwrite the global console

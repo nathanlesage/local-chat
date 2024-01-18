@@ -56,11 +56,23 @@
       </p>
 
       <h2>Available models</h2>
+      <button v-on:click="forceReloadModels">Force reload model information</button>
       <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
         <h4>{{ getModelName(model) }}</h4>
         <span class="size">{{ formatSize(model.bytes) }}</span>
         <span class="architecture">Architecture: {{ model.metadata?.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
         <span class="context-length">Context length: {{ getContextLength(model) }}</span>
+        <div class="prompt-selector">
+          Prompt template:
+          <select v-on:change="selectModelPromptWrapper($event, model.path)">
+            <option value="auto" v-bind:selected="model.config.prompt === 'auto'">Detect automatically</option>
+            <option value="general" v-bind:selected="model.config.prompt === 'general'">Generic</option>
+            <option value="empty" v-bind:selected="model.config.prompt === 'empty'">Empty</option>
+            <option value="llama" v-bind:selected="model.config.prompt === 'llama'">Llama</option>
+            <option value="chatml" v-bind:selected="model.config.prompt === 'chatml'">ChatML</option>
+            <option value="falcon" v-bind:selected="model.config.prompt === 'falcon'">Falcon</option>
+          </select>
+        </div>
 
         <p class="description">{{ model.metadata?.general.description ?? 'No description' }}</p>
         <span class="author">{{ model.metadata?.general.author ?? 'Unknown author' }}</span>
@@ -131,8 +143,22 @@ function getContextLength (model: ModelDescriptor) {
   }
 }
 
+function selectModelPromptWrapper (event: Event, modelPath: string) {
+  const select = event.target
+
+  if (!(select instanceof HTMLSelectElement)) {
+    return
+  }
+
+  ipcRenderer.invoke('select-model-prompt-wrapper', { modelPath, value: select.value })
+}
+
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
+}
+
+function forceReloadModels () {
+  ipcRenderer.invoke('force-reload-available-models').catch(err => alertError(err))
 }
 </script>
 
@@ -190,7 +216,7 @@ div.model-card {
   grid-template-rows: 20px 20px 20px auto 20px;
   grid-template-columns: auto auto 100px;
   grid-template-areas: "name name size"
-  "architecture architecture architecture"
+  "architecture prompt-selector prompt-selector"
   "context-length context-length context-length"
   "description description description"
   "author license license";
@@ -201,6 +227,7 @@ div.model-card h4 { grid-area: name; font-size: 100%; }
 div.model-card span.size { grid-area: size; text-align: right; }
 div.model-card span.architecture { grid-area: architecture }
 div.model-card span.context-length { grid-area: context-length; }
+div.model-card div.prompt-selector { grid-area: prompt-selector; }
 div.model-card span.author { grid-area: author; }
 div.model-card p.description { grid-area: description; }
 div.model-card span.license { grid-area: license; text-align: right; }

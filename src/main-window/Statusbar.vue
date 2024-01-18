@@ -14,7 +14,8 @@
     <!-- Model indication -->
     <div id="llama-status">
       <span>{{ llamaStatus.message }}</span>
-      <div v-if="isBusy" v-html="LoadingSpinner"></div>
+      <button v-if="!isBusy" v-on:click.prevent="forceReloadModel" class="icon" title="Force reload model" v-html="RepeatIcon"></button>
+      <button v-if="isBusy" v-on:click.prevent="abortGeneration" class="icon" title="Stop generating" v-html="StopIcon"></button>
     </div>
     <div>
       <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
@@ -29,7 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import LoadingSpinner from './icons/loading-spinner.svg'
+import StopIcon from './icons/stop-circle.svg'
+import RepeatIcon from './icons/repeat.svg'
 import CancelIcon from './icons/x.svg'
 import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/main/LlamaProvider'
@@ -64,6 +66,14 @@ ipcRenderer.invoke('get-llama-status')
 
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
+}
+
+function abortGeneration () {
+  ipcRenderer.send('stop-generating')
+}
+
+function forceReloadModel () {
+  ipcRenderer.invoke('force-reload-model').catch(err => alertError(err))
 }
 </script>
 
