@@ -50,13 +50,13 @@ jobs:
       - name: Package & Release
         run: yarn package:win-x64 && yarn release:win-x64
       - name: Inspect out dir
-        run: ls -al ./out/make
+        run: ls -al ./out/make/squirrel.windows
       - name: Cache installer
         uses: actions/upload-artifact@v3
         with:
           name: win32_x64
           path: |
-            ./out/make/LocalChat Setup.exe
+            ./out/make/squirrel.windows/LocalChat Setup.exe
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
