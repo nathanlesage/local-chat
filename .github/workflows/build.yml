@@ -49,12 +49,14 @@ jobs:
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
       - name: Package & Release
         run: yarn package:win-x64 && yarn release:win-x64
+      - name: Inspect out dir
+        run: ls -al ./out/make
       - name: Cache installer
         uses: actions/upload-artifact@v3
         with:
           name: win32_x64
           path: |
-            ./make/out/LocalChat-${{env.version}}-x64.exe
+            ./out/make/LocalChat Setup.exe
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
@@ -256,7 +258,7 @@ jobs:
         run: |
           cd ./release
           ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb
-          sha256sum "LocalChat-${{env.version}}-x64.exe" > "SHA256SUMS.txt"
+          sha256sum "LocalChat Setup.exe" > "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-x64.dmg" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-arm64.dmg" >> "SHA256SUMS.txt"
           sha256sum "localchat_${{env.version}}_amd64.deb" >> "SHA256SUMS.txt"
