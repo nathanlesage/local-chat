@@ -15,6 +15,10 @@ defaults:
 env:
   NODE_VERSION: '18'
 
+# The GitHub Token needs to be able to write contents in order to prepare a release.
+permissions:
+  contents: write
+
 # Ensure only a single build workflow runs at any one time
 concurrency:
   group: ${{ github.workflow }}
