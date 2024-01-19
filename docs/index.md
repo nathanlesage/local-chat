@@ -6,7 +6,7 @@
 
 LocalChat is a privacy-aware local chat bot that allows you to interact with a broad variety of generative large language models (LLMs) on Windows, macOS, and Linux. Imagine ChatGPT, but without the for-profit corporation and the data issues.
 
-![An impression of LocalChat](../static/screenshot.png)
+![An impression of LocalChat](images/screenshot.png)
 
 # Quick Start
 
