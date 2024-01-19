@@ -5,7 +5,7 @@ import { promises as fs, createWriteStream } from 'fs'
 import type { GGUFMetadata } from 'gguf/dist/metadataTypes'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import got from 'got'
-import { ChatPromptWrapper, getSupportedModelPrompt } from './LlamaProvider'
+import { ChatPromptWrapper } from './LlamaProvider'
 import { registerShutdownTask, registerStartupTask } from './util/lifecycle'
 
 export interface ModelConfig {
@@ -14,12 +14,12 @@ export interface ModelConfig {
    */
   prompt: ChatPromptWrapper
   /**
-   * An optional override for the context length. This is crucial for quantized
-   * models where the context length in the metadata still refers to the non-
-   * quantized context length, despite having been cut. This can prevent crashes
-   * when wrong context lengths are provided.
+   * An override for the context length. This is crucial for quantized models
+   * where the context length in the metadata still refers to the non-quantized
+   * context length, despite having been cut. This can prevent crashes when
+   * wrong context lengths are provided.
    */
-  contextLengthOverride?: number
+  contextLengthOverride: number
 }
 
 export interface ModelDescriptor {
@@ -152,13 +152,16 @@ export class ModelManager {
       this.downloadCancelFlag = true
     })
 
-    // ipcRenderer.invoke('select-model-prompt-wrapper', { modelPath, value: select.value })
     ipcMain.handle('select-model-prompt-wrapper', async (event, { modelPath, value }) => {
       return await this.selectModelPromptWrapper(modelPath, value)
     })
 
-    ipcMain.handle('force-reload-available-models', async (event) => {
-      return await this.forceReloadAvailableModels()
+    ipcMain.handle('select-model-context-length', async (event, { modelPath, value }) => {
+      return await this.selectModelContextLength(modelPath, value)
+    })
+    
+    ipcMain.handle('force-reload-available-models', async (event, args) => {
+      return await this.forceReloadAvailableModels(args === 'clear-config')
     })
   }
 
@@ -326,7 +329,8 @@ export class ModelManager {
       const metadata = this.modelMetadataCache.get(fullPath)
       const cachedConfig = this.modelConfigCache.get(fullPath)
       const defaultConfig: ModelConfig = {
-        prompt: 'auto'
+        prompt: 'auto',
+        contextLengthOverride: 2048
       }
 
       const model: ModelDescriptor = {
@@ -384,10 +388,24 @@ export class ModelManager {
     }
   }
 
+  async selectModelContextLength (modelPath: string, contextLength: number) {
+    const availableModels = await this.getAvailableModels()
+    const model = availableModels.find(model => model.path === modelPath)
+    if (model !== undefined) {
+      console.log(`Setting context length to ${contextLength} for model ${model.name}`)
+      model.config.contextLengthOverride = contextLength
+      this.modelConfigCache.set(modelPath, model.config)
+      const models = await this.getAvailableModels()
+      broadcastIPCMessage('available-models-updated', models)
+    }
+  }
 
-  public async forceReloadAvailableModels () {
+
+  public async forceReloadAvailableModels (clearConfig: boolean = false) {
     // Force reload means: Remove all data, and then re-fetch it. May take a while.
-    this.modelConfigCache.clear()
+    if (clearConfig) {
+      this.modelConfigCache.clear()
+    }
     this.modelMetadataCache.clear()
     const models = await this.getAvailableModels()
     broadcastIPCMessage('available-models-updated', models)

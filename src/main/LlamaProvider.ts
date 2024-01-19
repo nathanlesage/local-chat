@@ -155,12 +155,11 @@ export class LlamaProvider {
     const model: LlamaModel = new resolved.LlamaModel({
       modelPath: modelDescriptor.path
     } as LlamaModelOptions)
-    console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}. Instantiating new session.\x1b[0m`)
+    console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.\x1b[0m`)
 
     const context: LlamaContext = new resolved.LlamaContext({
         model,
-        // TODO: contextSize: Math.min(modelDescriptor.config.contextLengthOverride ?? Infinity, Math.max(2048, model.trainContextSize))
-        contextSize: Math.min(2048, model.trainContextSize)
+        contextSize: modelDescriptor.config.contextLengthOverride
     } as LlamaContextOptions)
 
     this.session = new resolved.LlamaChatSession({

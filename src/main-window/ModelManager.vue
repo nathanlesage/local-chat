@@ -56,12 +56,26 @@
       </p>
 
       <h2>Available models</h2>
-      <button v-on:click="forceReloadModels">Force reload model information</button>
+      <button v-on:click="forceReloadModels()">Force reload model metadata</button>
+      <button v-on:click="forceReloadModels(true)">Clear config</button>
       <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
         <h4>{{ getModelName(model) }}</h4>
         <span class="size">{{ formatSize(model.bytes) }}</span>
         <span class="architecture">Architecture: {{ model.metadata?.general.architecture ?? 'unknown' }} ({{ isQuantized(model) ? 'quantized' : 'full' }})</span>
-        <span class="context-length">Context length: {{ getContextLength(model) }}</span>
+        <span class="context-length">
+          Context length:
+          <select v-on:change="selectModelContextLength($event, model.path)">
+            <option
+              v-for="opt in getContextLength(model)"
+              v-key="opt.display"
+              v-bind:disabled="opt.disabled"
+              v-bind:selected="opt.selected"
+              v-bind:value="opt.value"
+            >
+              {{ opt.display }}
+            </option>
+          </select>
+        </span>
         <div class="prompt-selector">
           Prompt template:
           <select v-on:change="selectModelPromptWrapper($event, model.path)">
@@ -97,6 +111,7 @@ import CancelIcon from './icons/x.svg'
 import { formatSize } from './util/sizes'
 import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
+import { formatNumber } from './util/numbers'
 
 const store = useModelStore()
 
@@ -130,17 +145,24 @@ function isQuantized (model: ModelDescriptor) {
 }
 
 function getContextLength (model: ModelDescriptor) {
-  if (model.metadata === undefined) {
-    return 'Unknown'
+  const SUPPORTED_LENGTHS = [1024, 2048, 4096, 8192, 16384, 32768, 65536]
+
+  let nativeContextLength = Infinity
+  const arch = model.metadata?.general.architecture
+  if (model.metadata !== undefined && arch !== undefined && arch in model.metadata) {
+    // @ts-expect-error
+    nativeContextLength = parseInt(model.metadata[arch].context_length, 10)
   }
 
-  const arch = model.metadata?.general.architecture
-  if (arch in model.metadata) {
-    // @ts-expect-error
-    return model.metadata[arch].context_length
-  } else {
-    return 'Unknown'
-  }
+  return SUPPORTED_LENGTHS.map(length => {
+    const isTooLarge = length > nativeContextLength
+    return {
+      display: formatNumber(length),
+      value: length,
+      selected: length === model.config.contextLengthOverride,
+      disabled: isTooLarge
+    }
+  })
 }
 
 function selectModelPromptWrapper (event: Event, modelPath: string) {
@@ -153,12 +175,22 @@ function selectModelPromptWrapper (event: Event, modelPath: string) {
   ipcRenderer.invoke('select-model-prompt-wrapper', { modelPath, value: select.value })
 }
 
+function selectModelContextLength (event: Event, modelPath: string) {
+  const select = event.target
+
+  if (!(select instanceof HTMLSelectElement)) {
+    return
+  }
+
+  ipcRenderer.invoke('select-model-context-length', { modelPath, value: parseInt(select.value, 10) })
+}
+
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
 }
 
-function forceReloadModels () {
-  ipcRenderer.invoke('force-reload-available-models').catch(err => alertError(err))
+function forceReloadModels (clearConfig = false) {
+  ipcRenderer.invoke('force-reload-available-models', clearConfig ? 'clear-config' : undefined).catch(err => alertError(err))
 }
 </script>
 
