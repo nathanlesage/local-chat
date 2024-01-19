@@ -1,5 +1,6 @@
 module.exports = {
   hooks: {},
+  osxSign: {}, // NOTE: Key must be present, even if empty
   rebuildConfig: {
     // Since we must build native modules for both x64 as well as arm64, we have
     // to explicitly build it everytime for the correct architecture
