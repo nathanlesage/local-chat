@@ -80,8 +80,18 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
+      # Save the macOS certificate on this runner for forge to access it in the
+      # next step below.
+      - name: Retrieve code signing certificate
+        run: ./scripts/add-osx-cert.sh
+        env:
+          MACOS_CERT: ${{ secrets.MACOS_CERT }}
+          MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-x64
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-x64
       - name: Cache image file
@@ -109,8 +119,18 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
+      # Save the macOS certificate on this runner for forge to access it in the
+      # next step below.
+      - name: Retrieve code signing certificate
+        run: ./scripts/add-osx-cert.sh
+        env:
+          MACOS_CERT: ${{ secrets.MACOS_CERT }}
+          MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-arm
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-arm
       - name: Cache image file

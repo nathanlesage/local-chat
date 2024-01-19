@@ -1,6 +1,19 @@
 module.exports = {
   hooks: {},
-  osxSign: {}, // NOTE: Key must be present, even if empty
+  osxSign: {
+    identity: 'Developer ID Application: Hendrik Erz (QS52BN8W68)',
+    'hardened-runtime': true,
+    'gatekeeper-assess': false,
+    'signature-flags': 'library'
+  },
+  osxNotarize: ('APPLE_ID' in process.env && 'APPLE_ID_PASS' in process.env)
+    ? {
+        tool: 'notarytool',
+        appleId: process.env.APPLE_ID,
+        appleIdPassword: process.env.APPLE_ID_PASS,
+        teamId: 'QS52BN8W68'
+      }
+    : false,
   rebuildConfig: {
     // Since we must build native modules for both x64 as well as arm64, we have
     // to explicitly build it everytime for the correct architecture
