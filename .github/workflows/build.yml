@@ -68,6 +68,9 @@ jobs:
   build_macos_x64:
     name: macOS (x86_64)
     runs-on: macos-latest
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
     steps:
       # Check out master for a regular release, or develop branch for a nightly
       - name: Checkout branch ${{ github.ref_name }}
@@ -93,9 +96,6 @@ jobs:
           MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-x64
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-x64
       - name: Cache image file
@@ -108,6 +108,9 @@ jobs:
   build_macos_arm64:
     name: macOS (arm64)
     runs-on: macos-latest
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
     steps:
       - name: Checkout branch ${{ github.ref_name }}
         uses: actions/checkout@v3
@@ -132,9 +135,6 @@ jobs:
           MACOS_CERT_PASS: ${{ secrets.MACOS_CERT_PASS }}
       - name: Package
         run: yarn package:mac-arm
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
       - name: Release
         run: yarn release:mac-arm
       - name: Cache image file
