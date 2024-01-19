@@ -86,15 +86,15 @@ If you now visit, e.g., [TheBloke's quantized OpenChat 3.5 model](https://huggin
 
 ## Some Model Recommendations
 
-Mistral OpenOrca 7b
+[Mistral OpenOrca 7b](https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF)
 
 : I found this model offers a good balance between performance and quality. It comes in various sizes, and the "recommended" quantized one performs very well.
 
-OpenChat 3.5
+[OpenChat 3.5](https://huggingface.co/TheBloke/openchat-3.5-0106-GGUF)
 
 : A larger model than Mistral's 7b OpenOrca one. Despite being a bit slower in generating responses, it is a bit better in handling non-English questions.
 
-TinyLlama v1.0
+[TinyLlama v1.0 1.1b](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF)
 
 : As the same suggests, a very tiny model. My own laptop can handle the full model quite well, and indeed, the first version on LocalChat, which was still based on PyTorch and Huggingface Transformers, ran on TinyLlama. It has a bit worse quality than the other two models, but if you have slower hardware that cannot run even the quantized versions of OpenOrca or OpenChat, TinyLlama may suit you well.
 
