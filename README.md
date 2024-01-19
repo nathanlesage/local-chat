@@ -1,4 +1,9 @@
-# LocalChat
+<h1 align="center">
+  <a href="https://github.com/nathanlesage/local-chat">
+    <img src="https://raw.githubusercontent.com/nathanlesage/local-chat/master/static/png/64x64.png" alt="LocalChat"/>
+  </a><br>
+  LocalChat
+</h1>
 
 > Chat with generative language models locally on your computer with zero setup. LocalChat is a simple, easy to set-up local AI chat built on top of [llama.cpp](https://github.com/ggerganov/llama.cpp). It requires no technical knowledge and enables users to experience ChatGPT-like behavior on their own machines — fully GDPR-compliant and without the fear of accidentally leaking information.
 
