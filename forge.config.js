@@ -2,8 +2,6 @@ module.exports = {
   hooks: {},
   osxSign: {
     identity: 'Developer ID Application: Hendrik Erz (QS52BN8W68)',
-    'hardened-runtime': true,
-    'gatekeeper-assess': false,
     'signature-flags': 'library'
   },
   osxNotarize: ('APPLE_ID' in process.env && 'APPLE_ID_PASS' in process.env)

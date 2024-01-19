@@ -11,13 +11,15 @@
 # the command must be in a different (here: temp) directory, since apparently
 # there's a modal popping up if we attempt to codesign anything.
 # KEY_CHAIN=build.keychain
-KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
 CERT_FILE=certificate.p12
 
 # Recreate the certificate from the secure environment variable
+echo "Saving MACOS_CERT to $CERT_FILE."
 echo "$MACOS_CERT" | base64 --decode > $CERT_FILE
 
 # Create a new keychain using the password "actions"
+echo "Creating temporary keychain at $KEYCHAIN_PATH."
 security create-keychain -p actions $KEYCHAIN_PATH
 
 # Make the keychain the default so that electron-forge finds it
