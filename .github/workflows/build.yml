@@ -255,24 +255,22 @@ jobs:
       - name: Generate SHA256 checksums
         run: |
           cd ./release
+          ls -al
           sha256sum "LocalChat-${{env.version}} Setup.exe" > "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-x64.dmg" >> "SHA256SUMS.txt"
           sha256sum "LocalChat-${{env.version}}-arm64.dmg" >> "SHA256SUMS.txt"
           sha256sum "localchat_${{env.version}}_amd64.deb" >> "SHA256SUMS.txt"
           sha256sum "localchat_${{env.version}}_arm64.deb" >> "SHA256SUMS.txt"
-          sha256sum "localchat_${{env.version}}_x86_64.rpm" >> "SHA256SUMS.txt"
-          sha256sum "localchat_${{env.version}}_aarch64.rpm" >> "SHA256SUMS.txt"
           cd ..
+        # BUG: The rpm builder doesn't like it (see forge.config.js)
+        # sha256sum "localchat_${{env.version}}_x86_64.rpm" >> "SHA256SUMS.txt"
+        # sha256sum "localchat_${{env.version}}_aarch64.rpm" >> "SHA256SUMS.txt"
       - name: Verify checksums
         run: |
           cd ./release
           sha256sum -c SHA256SUMS.txt
           cd ..
-      # IF WE BUILD A NIGHTLY, AT THIS POINT JUST UPLOAD TO THE SERVER.
-      # We must make sure to copy the three additional files
-      # to the release folder because of the --delete flag in rsync below.
       - name: Create release draft
-        if: github.ref_name == 'master'
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -289,6 +287,7 @@ jobs:
             ./release/LocalChat-${{env.version}}-arm64.dmg
             ./release/localchat_${{env.version}}_amd64.deb
             ./release/localchat_${{env.version}}_arm64.deb
-            ./release/localchat_${{env.version}}_x86_64.rpm
-            ./release/localchat_${{env.version}}_aarch64.rpm
             ./release/SHA256SUMS.txt
+          # BUG: See above
+          # ./release/localchat_${{env.version}}_x86_64.rpm
+          # ./release/localchat_${{env.version}}_aarch64.rpm
