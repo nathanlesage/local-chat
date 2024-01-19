@@ -1,6 +1,5 @@
 <template>
   <select class="model-selector" v-on:change="selectModel">
-    <option disabled v-bind:selected="store.currentModel !== undefined">No model selected</option>
     <option
       v-for="model in store.models"
       v-bind:value="model.path"
