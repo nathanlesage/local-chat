@@ -154,8 +154,8 @@ jobs:
           name: linux_x64
           path: |
             ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb
-            ./out/make/rpm/x64/localchat_${{env.version}}_x86_64.rpm
-
+          # BUG: See below
+          # ./out/make/rpm/x64/localchat_${{env.version}}_x86_64.rpm
   build_linux_arm64:
     name: Linux (arm64)
     runs-on: ubuntu-20.04
@@ -184,7 +184,8 @@ jobs:
           name: linux_arm64
           path: |
             ./out/make/deb/arm64/localchat_${{env.version}}_arm64.deb
-            ./out/make/rpm/arm64/localchat_${{env.version}}_aarch64.rpm
+          # BUG: See below
+          # ./out/make/rpm/arm64/localchat_${{env.version}}_aarch64.rpm
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
