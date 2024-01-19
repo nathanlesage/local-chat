@@ -2,6 +2,14 @@
   <img src="images/logo.png" style="max-width: 65px;">
 </p>
 
+<p style="text-align: center;">
+  <a href="#quick-start">Quick Start</a> |
+  <a href="#documentation">Documentation</a> |
+  <a href="#finding-models">Finding Models</a> |
+  <a href="#some-model-recommendations">Model Recommendations</a> |
+  <a href="#support--questions">Support &amp; Questions</a>
+</p>
+
 # Overview
 
 LocalChat is a privacy-aware local chat bot that allows you to interact with a broad variety of generative large language models (LLMs) on Windows, macOS, and Linux. Imagine ChatGPT, but without the for-profit corporation and the data issues.
@@ -10,7 +18,7 @@ LocalChat is a privacy-aware local chat bot that allows you to interact with a b
 
 # Quick Start
 
-To get started with LocalChat, head over to <https://github.com/nathanlesage/local/chat/releases> and download the most recent release for your operating system. LocalChat supports macOS (10.15 or newer; both Intel and Apple Silicon), Windows (10 or newer; only x86), and Debian-based Linux (x86 and ARM 64bit). If you have experience building Electron-apps, you may also build it manually for other platforms.
+To get started with LocalChat, head over to <https://github.com/nathanlesage/local-chat/releases> and download the most recent release for your operating system. LocalChat supports macOS (10.15 or newer; both Intel and Apple Silicon), Windows (10 or newer; only x86), and Debian-based Linux (x86 and ARM 64bit). If you have experience building Electron-apps, you may also build it manually for other platforms.
 
 > Note: The Windows binary has not been code signed. This means that Windows will complain and try to convince you not to open the file. As long as you downloaded the file from the GitHub releases page, you can safely open the file.
 
@@ -27,6 +35,8 @@ Conversations are the core of LocalChat. You can create as many as you need, and
 Conversations are identified with a UUID4 hash. Click on any conversation to open it in the chat view. When you hover over a conversation, you will see a "Delete" button that you can use to remove a conversation.
 
 When a conversation is open, you can change the model that is being used to chat with the dropdown at the top. Note, however, that this may under certain circumstances lead to weird responses by the new model (which has not generated the previous answers).
+
+Lastly, you can export any conversation by clicking the appropriate button below the prompt text area. Choose a location and a filename. The conversations will be exported as Markdown.
 
 ## Chatting
 

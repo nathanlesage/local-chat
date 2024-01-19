@@ -1,5 +1,5 @@
 remote_theme: pages-themes/cayman@v0.2.0
 title: LocalChat
-show_downloads: true
+show_downloads: false
 plugins:
 - jekyll-remote-theme
