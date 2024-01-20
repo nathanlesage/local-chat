@@ -12,7 +12,8 @@
   <a href="#overview">Overview</a> |
   <a href="#why">Rationale</a> |
   <a href="#system-requirements">System Requirements</a> |
-  <a href="#quick-start">Quick Start</a>
+  <a href="#quick-start">Quick Start</a> |
+  <a href="https://nathanlesage.github.io/local-chat/#documentation">Documentation</a>
 </p>
 
 ![An impression of LocalChat running OpenOrca Mistral 7b quantized](./static/screenshot.png)
@@ -63,6 +64,9 @@ Many models nowadays come in a quantized form, which makes the larger models als
    2. Download a model in GGUF-format
    3. Place that model file into the app's model directory
 3. Chat!
+
+> [!TIP]
+> You can find the [full documentation](https://nathanlesage.github.io/local-chat/#documentation) on the app's website.
 
 The user interface is separated into three major components:
 
