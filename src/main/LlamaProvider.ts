@@ -15,10 +15,19 @@ import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import { ChatMessage } from './ConversationManager'
 import { registerStartupTask } from './util/lifecycle'
 
-export interface LlamaStatus {
-  status: 'uninitialized'|'ready'|'loading'|'generating'|'error'
+export type LLAMA_STATUS = 'uninitialized'|'ready'|'loading'|'generating'|'error'
+
+export interface LlamaStatusNormal {
+  status: 'uninitialized'|'ready'|'loading'|'generating'
   message: string
 }
+
+export interface LlamaStatusError {
+  status: 'error'
+  error: Error
+}
+
+export type LlamaStatus  = LlamaStatusNormal|LlamaStatusError
 
 let resolved: typeof import('node-llama-cpp')
 
@@ -45,14 +54,6 @@ export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
   }
 }
 
-export const LLAMA_STATUS: Record<string, LlamaStatus> = {
-  uninitialized: { status: 'uninitialized', message: 'Provider not initialized' },
-  loadingModel: { status: 'loading', message: 'Loading model' },
-  generating: { status: 'generating', message: 'Generating response' },
-  ready: { status: 'ready', message: 'Model ready' },
-  error: { status: 'error', message: 'Model encountered an error' }
-}
-
 export class LlamaProvider {
   private loadedModel: ModelDescriptor|undefined
   private lastLoadedConversationHistory: ChatMessage[]
@@ -61,7 +62,7 @@ export class LlamaProvider {
 
   constructor () {
     console.log('Instantiating LlamaProvider')
-    this.setStatus(LLAMA_STATUS.uninitialized)
+    this.setStatus('uninitialized', 'Provider not initialized')
     this.lastLoadedConversationHistory = []
 
     // Hook up event listeners
@@ -94,8 +95,12 @@ export class LlamaProvider {
     return this.loadedModel
   }
 
-  private setStatus (status: LlamaStatus) {
-    this.status = status
+  private setStatus (status: LLAMA_STATUS, payload: string|Error) {
+    if (status === 'error' && typeof payload !== 'string') {
+      this.status = { status, error: payload }
+    } else if (status !== 'error' && typeof payload === 'string') {
+      this.status = { status, message: payload }
+    }
     broadcastIPCMessage('llama-status-updated', this.status)
   }
 
@@ -151,7 +156,7 @@ export class LlamaProvider {
     }
 
     
-    this.setStatus(LLAMA_STATUS.loadingModel)
+    this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
     
     console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
     const model: LlamaModel = new resolved.LlamaModel({
@@ -175,7 +180,7 @@ export class LlamaProvider {
 
     this.loadedModel = modelDescriptor
 
-    this.setStatus(LLAMA_STATUS.ready)
+    this.setStatus('ready', 'Model ready')
 
     broadcastIPCMessage('loaded-model-updated', this.loadedModel)
   }
@@ -185,7 +190,7 @@ export class LlamaProvider {
       throw new Error('Cannot prompt model: None loaded')
     }
 
-    this.setStatus(LLAMA_STATUS.generating)
+    this.setStatus('generating', 'Generating')
     const abortController = new AbortController()
 
     // Abort if the user wishes so
@@ -205,11 +210,11 @@ export class LlamaProvider {
         signal: abortController.signal
       })
       ipcMain.off('stop-generating', callback)
-      this.setStatus(LLAMA_STATUS.ready)
+      this.setStatus('ready', 'Model ready')
       return answer
     } catch (err) {
       ipcMain.off('stop-generating', callback)
-      this.setStatus(LLAMA_STATUS.ready)
+      this.setStatus('ready', 'Model ready')
       return chunks
     }
   }

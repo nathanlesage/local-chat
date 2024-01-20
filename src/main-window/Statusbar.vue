@@ -13,9 +13,22 @@
     </div>
     <!-- Model indication -->
     <div id="llama-status">
-      <span>{{ llamaStatus.message }}</span>
-      <button v-if="!isBusy" v-on:click.prevent="forceReloadModel" class="icon" title="Force reload model" v-html="RepeatIcon"></button>
-      <button v-if="isBusy" v-on:click.prevent="abortGeneration" class="icon" title="Stop generating" v-html="StopIcon"></button>
+      <span>{{ getLlamaStatusMessage(llamaStatus) }}</span>
+      <button
+        v-if="!isGenerating && !isLoading"
+        v-on:click.prevent="forceReloadModel"
+        class="icon"
+        title="Force reload model"
+        v-html="RepeatIcon"
+      ></button>
+
+      <button
+        v-if="isGenerating"
+        v-on:click.prevent="abortGeneration"
+        class="icon"
+        title="Stop generating"
+        v-html="StopIcon"
+      ></button>
     </div>
     <div>
       <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
@@ -54,8 +67,12 @@ ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
   llamaStatus.value = newStatus
 })
 
-const isBusy = computed<boolean>(() => {
-  return [ 'generating', 'loading'].includes(llamaStatus.value.status)
+const isGenerating = computed<boolean>(() => {
+  return llamaStatus.value.status === 'generating'
+})
+
+const isLoading = computed<boolean>(() => {
+  return llamaStatus.value.status === 'loading'
 })
 
 ipcRenderer.invoke('get-llama-status')
@@ -63,6 +80,14 @@ ipcRenderer.invoke('get-llama-status')
     llamaStatus.value = status
   })
   .catch(err => alertError(err))
+
+function getLlamaStatusMessage (status: LlamaStatus) {
+  if (status.status === 'error') {
+    return status.error.message
+  } else {
+    return status.message
+  }
+}
 
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
