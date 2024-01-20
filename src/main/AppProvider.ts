@@ -11,7 +11,6 @@ import { ConversationManager } from './ConversationManager'
 import path from 'path'
 import { promises as fs } from 'fs'
 import { setApplicationMenu } from './util/set-application-menu'
-import { runStartupTasks } from './util/lifecycle'
 
 export interface AppNotification {
   title: string
@@ -23,9 +22,11 @@ export interface AppNotification {
 export class AppProvider {
   private mainWindow: BrowserWindow|undefined
   private showFirstStartGuide: boolean
-  private whenReady: Promise<void>|undefined
 
   constructor () {
+    // Allow the conversation manager to register its startup tasks.
+    ConversationManager.getConversationManager()
+
     this.showFirstStartGuide = false
     ipcMain.handle('should-show-first-start-guide', (event, args) => {
       return this.showFirstStartGuide
@@ -51,13 +52,6 @@ export class AppProvider {
 
   async boot () {
     await this.checkForFirstStart()
-    // Access the Conversation manager to instantiate it. NOTE: Will also boot
-    // the ModelManager.
-    ConversationManager.getConversationManager()
-    // At this point, all providers should've been instantiated and will have
-    // registered their startup tasks. Now we run them so that everything is
-    // booted.
-    await runStartupTasks()
     setApplicationMenu()
     await this.showMainWindow()
   }

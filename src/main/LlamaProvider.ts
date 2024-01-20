@@ -13,7 +13,6 @@ import mod from 'node-llama-cpp'
 import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import { ChatMessage } from './ConversationManager'
-import { registerStartupTask } from './util/lifecycle'
 
 export type LLAMA_STATUS = 'uninitialized'|'ready'|'loading'|'generating'|'error'
 
@@ -29,11 +28,12 @@ export interface LlamaStatusError {
 
 export type LlamaStatus  = LlamaStatusNormal|LlamaStatusError
 
-let resolved: typeof import('node-llama-cpp')
-
-registerStartupTask(async () => {
-  resolved = await (mod as any) as typeof import('node-llama-cpp')
-})
+/**
+ * Retrieves the Llama module. This is to fix a BUG (see)
+ */
+async function llamaModule (): Promise<typeof import('node-llama-cpp')> {
+  return await (mod as any)
+}
 
 export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
 
@@ -129,7 +129,8 @@ export class LlamaProvider {
     return conv
   }
 
-  private getChatTemplateWrapper (prompt: string): 'auto'|ChatWrapper {
+  private async getChatTemplateWrapper (prompt: string): Promise<'auto'|ChatWrapper> {
+    const resolved = await llamaModule()
     switch (prompt) {
       case 'llama':
         return new resolved.LlamaChatWrapper()
@@ -146,7 +147,7 @@ export class LlamaProvider {
     }
   }
 
-  loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
+  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
     if (
       modelDescriptor.path === this.loadedModel?.path &&
       JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation) &&
@@ -155,6 +156,7 @@ export class LlamaProvider {
       return // Nothing to do
     }
 
+    const resolved = await llamaModule()
     
     this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
     
@@ -171,7 +173,7 @@ export class LlamaProvider {
 
     this.session = new resolved.LlamaChatSession({
         contextSequence: context.getSequence(),
-        chatWrapper: this.getChatTemplateWrapper(modelDescriptor.config.prompt)
+        chatWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
     } as LlamaChatSessionOptions)
 
     this.session.setChatHistory(this.convertConversationMessages(previousConversation))

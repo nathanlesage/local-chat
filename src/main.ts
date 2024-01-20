@@ -4,6 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
 import { Logger } from './main/Logger'
+import { awaitStartupTasks } from './main/util/lifecycle'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -17,12 +18,10 @@ preBootSetup()
 Logger.getLogger() // Init logger now that the paths are correctly set
 const localChat = new AppProvider()
 
-app.whenReady().then(() => {
-  afterReadySetup()
-    .then(() => {
-      localChat.boot().catch(err => console.error(err))
-    })
-    .catch(err => console.error(err))
+app.whenReady().then(async () => {
+  await afterReadySetup()
+  await awaitStartupTasks()
+  await localChat.boot()
 })
 
 app.on('will-quit', () => {
