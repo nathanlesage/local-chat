@@ -3,27 +3,31 @@ import type {
   LlamaChatSession,
   LlamaModel,
   LlamaContext,
-  ConversationInteraction,
+  ChatHistoryItem,
   LlamaChatSessionOptions,
   LlamaContextOptions,
   LlamaModelOptions,
-  ChatMLChatPromptWrapper,
-  FalconChatPromptWrapper,
-  GeneralChatPromptWrapper,
-  LlamaChatPromptWrapper,
-  EmptyChatPromptWrapper
+  ChatWrapper
 } from 'node-llama-cpp'
 import mod from 'node-llama-cpp'
 import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import { ChatMessage } from './ConversationManager'
+import { registerStartupTask } from './util/lifecycle'
 
 export interface LlamaStatus {
   status: 'uninitialized'|'ready'|'loading'|'generating'|'error'
   message: string
 }
 
+let resolved: typeof import('node-llama-cpp')
+
+registerStartupTask(async () => {
+  resolved = await (mod as any) as typeof import('node-llama-cpp')
+})
+
 export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
+
 export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
   switch (prompt) {
     case 'llama':
@@ -70,11 +74,11 @@ export class LlamaProvider {
       return this.status
     })
 
-    ipcMain.handle('force-reload-model', async (event) => {
+    ipcMain.handle('force-reload-model', (event) => {
       if (this.loadedModel === undefined) {
         throw new Error('Could not reload model: None loaded.')
       }
-      return await this.loadModel(this.loadedModel, this.lastLoadedConversationHistory, true)
+      return this.loadModel(this.loadedModel, this.lastLoadedConversationHistory, true)
     })
   }
 
@@ -98,46 +102,46 @@ export class LlamaProvider {
   /**
    * Small helper function that converts given chat messages into the format accepted by llama.cpp
    *
-   * @param   {ChatMessage[]}              messages  The messages to convert
+   * @param   {ChatMessage[]}      messages  The messages to convert
    *
-   * @return  {ConversationInteraction[]}            The converted messages
+   * @return  {ChatHistoryItem[]}            The converted messages
    */
-  private convertConversationMessages (messages: ChatMessage[]): ConversationInteraction[] {
+  private convertConversationMessages (messages: ChatMessage[]): ChatHistoryItem[] {
     if (messages.length % 2 !== 0) {
       console.warn('Will omit messages from the conversation before feeding to the model: No paired selection.')
     }
 
-    const conv: ConversationInteraction[] = []
+    const conv: ChatHistoryItem[] = []
 
     for (let i = 0; i < messages.length - 1; i += 2) {
-      const prompt = messages[i].content
-      const response = messages[i + 1].content
-      conv.push({ prompt, response })
+      const user = messages[i]
+      const assistant = messages[i + 1]
+      conv.push({ type: 'user', text: user.content })
+      // For model response, see file LlamaChat.ts in node-llama-cpp
+      conv.push({ type: 'model', response: [assistant.content] })
     }
 
     return conv
   }
 
-  private async getChatTemplateWrapper (prompt: string): Promise<'auto'|ChatPromptWrapper> {
-    console.log(`\x1b[1;31mReturning prompt wrapper for query ${prompt}.\x1b[0m`)
-    const resolved = await (mod as any)
+  private getChatTemplateWrapper (prompt: string): 'auto'|ChatWrapper {
     switch (prompt) {
       case 'llama':
-        return new resolved.LlamaChatPromptWrapper()
+        return new resolved.LlamaChatWrapper()
       case 'chatml':
-        return new resolved.ChatMLChatPromptWrapper()
+        return new resolved.ChatMLChatWrapper()
       case 'falcon':
-        return new resolved.FalconChatPromptWrapper()
+        return new resolved.FalconChatWrapper()
       case 'general':
-        return new resolved.GeneralChatPromptWrapper()
+        return new resolved.GeneralChatWrapper()
       case 'empty':
-        return new resolved.EmptyChatPromptWrapper()
+        return new resolved.EmptyChatWrapper()
       default:
         return 'auto'
     }
   }
 
-  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
+  loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
     if (
       modelDescriptor.path === this.loadedModel?.path &&
       JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation) &&
@@ -148,8 +152,6 @@ export class LlamaProvider {
 
     
     this.setStatus(LLAMA_STATUS.loadingModel)
-    
-    const resolved = await (mod as any)
     
     console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
     const model: LlamaModel = new resolved.LlamaModel({
@@ -164,9 +166,10 @@ export class LlamaProvider {
 
     this.session = new resolved.LlamaChatSession({
         contextSequence: context.getSequence(),
-        conversationHistory: this.convertConversationMessages(previousConversation),
-        promptWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
+        chatWrapper: this.getChatTemplateWrapper(modelDescriptor.config.prompt)
     } as LlamaChatSessionOptions)
+
+    this.session.setChatHistory(this.convertConversationMessages(previousConversation))
 
     console.log(`\x1b[1;31mSession initialized with ${previousConversation.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
 

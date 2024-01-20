@@ -4583,10 +4583,10 @@ node-gyp@^9.0.0:
     tar "^6.1.2"
     which "^2.0.2"
 
-node-llama-cpp@^3.0.0-beta.1:
-  version "3.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/node-llama-cpp/-/node-llama-cpp-3.0.0-beta.1.tgz#ef61118c38c248d925da2d15fe7c6f855a6d9da1"
-  integrity sha512-IKCyWA69tPQRNFhiWSnkPTt3Ce7Ij2HauYhrwWbFHO+yIFKlx10x6/Xk6XGt9iR9eLsRle0l8YSnoKDvt2nn0A==
+node-llama-cpp@^3.0.0-beta.2:
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/node-llama-cpp/-/node-llama-cpp-3.0.0-beta.2.tgz#d5b75b5b2ce00d00ba0ecceb81ee381d755c32c3"
+  integrity sha512-k+CvfoIiDy1cMAZrw1z2dNss9/BdQHyY+EdP0H8WdVcN2b4Bp6ABVJCyyZ1Gqgcku7cyhM/kNpI8eRF8z0r6dQ==
   dependencies:
     chalk "^5.3.0"
     chmodrp "^1.0.2"
