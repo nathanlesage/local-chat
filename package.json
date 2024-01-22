@@ -7,6 +7,7 @@
   "license": "GPL-3.0-only",
   "private": false,
   "scripts": {
+    "prepare-release": "./scripts/prepare-release.sh",
     "start": "NODE_ENV=develop electron-forge start",
     "package": "electron-forge package",
     "package:mac-x64": "electron-forge package --platform=darwin --arch=x64",
