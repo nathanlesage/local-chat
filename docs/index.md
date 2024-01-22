@@ -34,6 +34,8 @@ Conversations are the core of LocalChat. You can create as many as you need, and
 
 Conversations are identified with a UUID4 hash. Click on any conversation to open it in the chat view. When you hover over a conversation, you will see a "Delete" button that you can use to remove a conversation.
 
+You can also change a conversation's description to easily remember what it was about. To do so, hover over the conversation so that you can see the "Change description" button. Click it so that a text field opens. Change the description to your liking, then confirm the changes by pressing `Enter` or `Shift-Enter` while the text field is focused. You can abort the change process by pressing `Escape` while the text field is focused.
+
 When a conversation is open, you can change the model that is being used to chat with the dropdown at the top. Note, however, that this may under certain circumstances lead to weird responses by the new model (which has not generated the previous answers).
 
 Lastly, you can export any conversation by clicking the appropriate button below the prompt text area. Choose a location and a filename. The conversations will be exported as Markdown.
