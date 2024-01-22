@@ -75,6 +75,10 @@ export class LlamaProvider {
       return this.status
     })
 
+    ipcMain.handle('get-llama-info', async (event) => {
+      return await (await llamaModule()).getReleaseInfo()
+    })
+
     ipcMain.handle('force-reload-model', (event) => {
       if (this.loadedModel === undefined) {
         throw new Error('Could not reload model: None loaded.')

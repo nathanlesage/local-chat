@@ -13,7 +13,19 @@
     </div>
     <!-- Model indication -->
     <div id="llama-status">
-      <span>{{ getLlamaStatusMessage(llamaStatus) }}</span>
+      <span>
+        {{ getLlamaStatusMessage(llamaStatus) }}
+        (<code>
+          <a
+            v-if="modelStore.llamaInfo !== undefined"
+            title="Click for more info about this llama.cpp release"
+            v-bind:href="`https://github.com/ggerganov/llama.cpp/releases/tag/${modelStore.llamaInfo.llamaCpp.release}`"
+          >
+            {{ modelStore.llamaInfo.llamaCpp.release }}
+          </a>
+          <span v-else title="Llama.cpp release is unknown">unknown</span>
+        </code>)
+      </span>
       <button
         v-if="!isGenerating && !isLoading"
         v-on:click.prevent="forceReloadModel"
@@ -106,12 +118,17 @@ function forceReloadModel () {
 div#statusbar {
   grid-area: statusbar;
   display: flex;
+  font-size: 80%;
   justify-content: end;
   gap: 20px;
   padding: 0 20px;
   align-items: center;
   background-color: rgb(33, 33, 33);
   color: white;
+}
+
+div#statusbar a {
+  color: rgb(182, 208, 253);
 }
 
 div#statusbar div {

@@ -186,6 +186,10 @@ select, button {
   border-radius: 8px;
 }
 
+details summary {
+  cursor: pointer;
+}
+
 button {
   height: 23px;
 }
