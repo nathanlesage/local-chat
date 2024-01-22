@@ -16,9 +16,11 @@
     <Chat></Chat>
     <Statusbar></Statusbar>
     <div id="resizer" v-on:mousedown="beginResizing"></div>
-    <Teleport to="body" v-if="showFirstStartGuide">
-      <FirstStartGuide v-on:close-modal="showFirstStartGuide = false"></FirstStartGuide>
-    </Teleport>
+    <FirstStartGuide
+      v-if="showFirstStartGuide"
+      v-on:close-modal="showFirstStartGuide = false"
+    >
+    </FirstStartGuide>
   </div>
 </template>
 

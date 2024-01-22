@@ -45,12 +45,11 @@
     <div>
       <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
     </div>
-    <Teleport to="body">
-      <ModelManager
-        v-if="showModelManager"
-        v-on:close-modal="showModelManager = !showModelManager"
-      ></ModelManager>
-    </Teleport>
+
+    <ModelManager
+      v-if="showModelManager"
+      v-on:close-modal="showModelManager = !showModelManager"
+    ></ModelManager>
   </div>
 </template>
 

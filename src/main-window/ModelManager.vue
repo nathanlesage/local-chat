@@ -1,14 +1,12 @@
 <template>
-  <div id="model-manager-modal">
-    <div
-      id="model-manager-modal-close"
-      title="Close Model Manager"
-      v-on:click="emit('close-modal')"
-    >&times;</div>
-    <h1>Model Manager</h1>
-    <div id="model-manager-modal-body">
+  <Modal id="model-manager-modal" v-on:close-modal="$emit('close-modal')">
+    <template v-slot:modal-header>
+      <h1>Model Manager</h1>
+    </template>
+    <template v-slot:modal-body>
+      <h2>Download new models</h2>
       <details>
-        <summary>Usage</summary>
+        <summary>How to find models</summary>
         <p>
           LocalChat works with a variety of models that can perform differently
           depending on your use-case. There are coding models, general assistant
@@ -33,7 +31,6 @@
         </ol>
       </details>
 
-      <h2>Download new models</h2>
       <p v-if="!store.modelDownloadStatus.isDownloading">
         Download a new model by pasting its HTTP-URL into this textfield:
         <input id="model-download-field" type="text" placeholder="https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q2_K.gguf" v-model="modelPath">
@@ -95,12 +92,11 @@
       <p v-else>
         No models found
       </p>
-    </div>
-
-    <div id="model-manager-modal-footer">
+    </template>
+    <template v-slot:modal-footer>
       <button v-on:click="openModelDirectory">Open model directory</button>
-    </div>
-  </div>
+    </template>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -112,6 +108,7 @@ import { formatSize } from './util/sizes'
 import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 import { formatNumber } from './util/numbers'
+import Modal from './util/Modal.vue'
 
 const store = useModelStore()
 
@@ -195,22 +192,6 @@ function forceReloadModels (clearConfig = false) {
 </script>
 
 <style>
-div#model-manager-modal {
-  position: absolute;
-  z-index: 2;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: var(--footer-height);
-  background-color: rgba(230, 230, 230);
-  color: rgb(66, 66, 66);
-  padding: 20px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
 div#model-download-progress-wrapper {
   display: flex;
   justify-content: space-around;
@@ -222,21 +203,8 @@ div#model-download-progress-wrapper progress {
   flex-grow: 1;
 }
 
-div#model-manager-modal-body {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
 div#model-manager-modal ol li {
   margin: 15px 0;
-}
-
-div#model-manager-modal-close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  cursor: pointer;
-  font-size: 200%;
 }
 
 div.model-card {
@@ -272,16 +240,9 @@ div.model-card span.author {
   font-family: monospace;
 }
 
-div#model-manager-modal-body  input#model-download-field {
+input#model-download-field {
   display: block;
   width: 100%;
   margin: 10px 0px;
-}
-
-@media (prefers-color-scheme: dark) {
-  div#model-manager-modal {
-    background-color: rgb(66, 66, 66);
-    color: white;
-  }
 }
 </style>
