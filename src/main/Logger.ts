@@ -10,7 +10,6 @@ export class Logger {
 
   private constructor () {
     const logPath = path.join(app.getPath('logs'), 'process.log')
-    console.log('Logging to path %s', logPath)
     const errorLogPath = path.join(app.getPath('logs'), 'error.log')
     this.stdout = fs.createWriteStream(logPath, { flags: 'a+' })
     this.stderr = fs.createWriteStream(errorLogPath, { flags: 'a+' })
