@@ -1,4 +1,4 @@
-import { Menu, shell, MenuItemConstructorOptions } from 'electron'
+import { Menu, shell, MenuItemConstructorOptions, app } from 'electron'
 
 /**
  * Sets the application menu.
@@ -18,15 +18,27 @@ export function setApplicationMenu() {
       role: 'help',
       submenu: [
         {
-          label: 'Learn More',
+          label: 'Website',
           click: async () => {
-            await shell.openExternal('https://www.hendrik-erz.de') // TODO
+            await shell.openExternal('https://nathanlesage.github.io/local-chat/')
+          }
+        },
+        {
+          label: 'Report issue',
+          click: async () => {
+            await shell.openExternal('https://github.com/nathanlesage/local-chat/issues')
+          }
+        },
+        {
+          label: 'Open logs folder',
+          click: async () => {
+            await shell.openPath(app.getPath('logs'))
           }
         }
       ]
     }
   ]
 
-  const menu = Menu.buildFromTemplate(template as any)
+  const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 }
