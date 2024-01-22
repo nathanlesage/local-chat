@@ -55,6 +55,10 @@ export class ConversationManager {
       return this.selectConversation(args)
     })
 
+    ipcMain.handle('rename-conversation', async (event, { conversationId, description }) => {
+      return this.renameConversation(conversationId, description)
+    })
+
     ipcMain.handle('export-conversation', async (event, args) => {
       return await this.exportConversation(args)
     })
@@ -228,6 +232,16 @@ export class ConversationManager {
           .then(model => this.llamaProvider.loadModel(model, update.messages))
       }
     }
+  }
+
+  public renameConversation (conversationId: string, description: string) {
+    const convo = this.conversations.find(c => c.id === conversationId)
+    if (convo === undefined) {
+      throw new Error('Cannot rename conversation: Not found')
+    }
+
+    convo.description = description
+    this.updateConversation(convo, false) // No need to force reload the model
   }
 
   public deleteConversation (conversationId: string) {

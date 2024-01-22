@@ -15,7 +15,23 @@
     >
       <h3 class="id">{{ conv.id }}</h3>
       <span class="timestamp">{{ formatDate(conv.startedAt, 'date') }}</span>
-      <span class="description">{{ conv.description }}</span>
+
+      <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
+      <input
+        v-if="conversationRename !== undefined"
+        type="text"
+        placeholder="Describe this conversation..."
+        v-model="conversationDescription"
+        v-on:keydown.shift.enter.prevent="finishChangeDescription()"
+        v-on:keydown.enter.prevent="finishChangeDescription()"
+        v-on:keydown.esc.prevent="abortChangeDescription()"
+        v-on:click.prevent.stop=""
+        autofocus="true"
+      >
+
+      <span v-if="conversationRename === undefined" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
+      <button v-if="conversationRename === undefined" class="rename" v-on:click.prevent.stop="startChangeDescription(conv.id)">Change description</button>
+
       <span class="message-count">{{ conv.messages.length }} messages</span>
       <button class="delete" v-on:click.prevent.stop="deleteConversation(conv.id)">Delete</button>
     </div>
@@ -34,10 +50,14 @@ import { useConversationStore } from './pinia/conversations'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
 import { formatDate } from './util/dates'
+import { ref } from 'vue'
 
 const conversationStore = useConversationStore()
 const modelStore = useModelStore()
 const ipcRenderer = window.ipc
+
+const conversationRename = ref<string|undefined>(undefined)
+const conversationDescription = ref<string>('')
 
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
@@ -52,6 +72,50 @@ function selectConversation (conversationId: string) {
 function deleteConversation (conversationId: string) {
   ipcRenderer.invoke('delete-conversation', conversationId)
     .catch(err => alertError(err))
+}
+
+/**
+ * Starts the process of changing a conversation's description
+ *
+ * @param   {string}  conversationId  The conversation to be rephrased
+ */
+function startChangeDescription (conversationId: string) {
+  console.log('Starting rename')
+  const convo = conversationStore.conversations.find(c => c.id === conversationId)
+  if (convo === undefined) {
+    return
+  }
+
+  conversationRename.value = conversationId
+  conversationDescription.value = convo.description
+}
+
+/**
+ * Finishes the process of changing a conversation's description by sending the
+ * new description to main.
+ */
+function finishChangeDescription () {
+  if (conversationRename.value === undefined) {
+    alertError(new Error('Cannot rename conversation: None found'))
+    return
+  }
+
+  ipcRenderer.invoke('rename-conversation', {
+    conversationId: conversationRename.value,
+    description: conversationDescription.value
+  })
+    .catch(err => alertError(err))
+
+  conversationRename.value = undefined
+  conversationDescription.value = ''
+}
+
+/**
+ * Aborts a change of description.
+ */
+function abortChangeDescription () {
+  conversationRename.value = undefined
+  conversationDescription.value = ''
 }
 </script>
 
@@ -68,6 +132,8 @@ aside#conversations {
 aside#conversations .conversation {
   padding: 5px;
   border-radius: 8px;
+  font-size: 80%;
+  line-height: 20px;
   cursor: default;
   margin-bottom: 10px;
   display: grid;
@@ -79,11 +145,16 @@ aside#conversations .conversation {
 aside#conversations .conversation button.delete {
   background-color: rgb(64, 1, 1);
   color: white;
-  font-size: 70%;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   border-radius: 4px;
+  padding: 0px;
+  margin: 0 2px;
+  display: none;
+}
+
+aside#conversations .conversation button.rename {
   padding: 2px 4px;
   margin: 0 2px;
   display: none;
@@ -95,6 +166,11 @@ aside#conversations .conversation:hover button {
 
 aside#conversations .conversation button.delete {
   grid-area: delete-button;
+}
+
+aside#conversations .conversation button.rename,
+aside#conversations .conversation input[type=text] {
+  grid-area: description;
 }
 
 aside#conversations .conversation button.delete:hover {
@@ -113,7 +189,6 @@ aside#conversations .conversation h3 {
 aside#conversations .conversation .timestamp {
   grid-area: time;
   white-space: nowrap;
-  font-size: 70%;
   opacity: 0.7;
 }
 
@@ -124,12 +199,12 @@ aside#conversations .conversation:hover, aside#conversations .conversation.activ
 aside#conversations .conversation .description {
   display: block;
   margin: 5px 0;
+  line-height: 120%;
   grid-area: description;
 }
 
 aside#conversations .conversation .message-count {
   display: block;
-  font-size: 70%;
   opacity: 0.7;
   margin: 8px 0;
   grid-area: count
