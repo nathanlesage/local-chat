@@ -18,7 +18,7 @@
 
       <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
       <input
-        v-if="conversationRename !== undefined"
+        v-if="conversationRename !== undefined && conversationRename === conv.id"
         type="text"
         placeholder="Describe this conversation..."
         v-model="conversationDescription"
@@ -29,11 +29,22 @@
         autofocus="true"
       >
 
-      <span v-if="conversationRename === undefined" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
-      <button v-if="conversationRename === undefined" class="rename" v-on:click.prevent.stop="startChangeDescription(conv.id)">Change description</button>
-
+      <span v-if="conversationRename !== conv.id" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
+      
       <span class="message-count">{{ conv.messages.length }} messages</span>
-      <button class="delete" v-on:click.prevent.stop="deleteConversation(conv.id)">Delete</button>
+      <div class="action-button-wrapper">
+        <button
+          v-if="conversationRename === undefined"
+          class="rename icon"
+          v-on:click.prevent.stop="startChangeDescription(conv.id)"
+          title="Change description"
+        >
+          <vue-feather type="edit" size="12"></vue-feather>
+        </button>
+        <button class="delete icon" v-on:click.prevent.stop="deleteConversation(conv.id)" title="Delete conversation">
+          <vue-feather type="trash-2" size="12"></vue-feather>
+        </button>
+      </div>
     </div>
 
     <div>
@@ -138,25 +149,20 @@ aside#conversations .conversation {
   margin-bottom: 10px;
   display: grid;
   grid-template-columns: auto auto;
-  grid-template-areas: "title time" "description description" "count delete-button";
+  grid-template-areas: "title time" "description description" "count actions";
   align-items: center;
 }
 
 aside#conversations .conversation button.delete {
   background-color: rgb(64, 1, 1);
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 0px;
-  margin: 0 2px;
-  display: none;
 }
 
-aside#conversations .conversation button.rename {
+aside#conversations .conversation button {
   padding: 2px 4px;
   margin: 0 2px;
+  border-radius: 4px;
+  aspect-ratio: 1;
   display: none;
 }
 
@@ -164,11 +170,11 @@ aside#conversations .conversation:hover button {
   display: initial;
 }
 
-aside#conversations .conversation button.delete {
-  grid-area: delete-button;
+aside#conversations .conversation .action-button-wrapper {
+  grid-area: actions;
+  text-align: right;
 }
 
-aside#conversations .conversation button.rename,
 aside#conversations .conversation input[type=text] {
   grid-area: description;
 }
