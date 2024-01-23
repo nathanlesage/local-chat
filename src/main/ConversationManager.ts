@@ -277,18 +277,19 @@ export class ConversationManager {
     const response = await dialog.showSaveDialog({
       title: 'Save conversation',
       defaultPath: app.getPath('documents'),
-      filters: [{ extensions: ['*.md'], name: 'Markdown' }],
+      filters: [{ extensions: ['.md'], name: 'Markdown' }],
       message: 'Enter a filename'
     })
 
-    if (response.filePath === undefined) {
+    // NOTE: `filePath` may also be an empty string after a cancellation
+    // -> check for both!
+    if (response.filePath === undefined || response.canceled) {
       console.log('User aborted conversation export')
       return
     }
 
     const content: string[] = []
 
-    // conv.
     const model = await this.modelManager.getModel(conv.modelPath)
     const modelName = model === undefined ? conv.modelPath : model.metadata?.general.name ?? model.name
     content.push(`# Conversation with ${modelName} (${conv.startedAt})`)
