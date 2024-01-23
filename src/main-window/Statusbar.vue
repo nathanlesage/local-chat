@@ -9,7 +9,9 @@
       <span class="monospace">
         ({{ formatSize(modelStore.modelDownloadStatus.bytes_per_second) }}/s; {{ formatSeconds(modelStore.modelDownloadStatus.eta_seconds) }})
       </span>
-      <button class="icon" v-on:click="cancelDownload" v-html="CancelIcon" title="Abort download"></button>
+      <button class="icon" v-on:click="cancelDownload" title="Abort download">
+        <vue-feather type="x" v-bind:size="ICON_SIZE"></vue-feather>
+      </button>
     </div>
     <!-- Model indication -->
     <div id="llama-status">
@@ -31,16 +33,18 @@
         v-on:click.prevent="forceReloadModel"
         class="icon"
         title="Force reload model"
-        v-html="RepeatIcon"
-      ></button>
+      >
+        <vue-feather type="repeat" v-bind:size="ICON_SIZE"></vue-feather>
+      </button>
 
       <button
         v-if="isGenerating"
         v-on:click.prevent="abortGeneration"
         class="icon"
         title="Stop generating"
-        v-html="StopIcon"
-      ></button>
+      >
+        <vue-feather type="stop-circle" v-bind:size="ICON_SIZE"></vue-feather>
+      </button>
     </div>
     <div>
       <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
@@ -54,9 +58,6 @@
 </template>
 
 <script setup lang="ts">
-import StopIcon from './icons/stop-circle.svg'
-import RepeatIcon from './icons/repeat.svg'
-import CancelIcon from './icons/x.svg'
 import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/main/LlamaProvider'
 import { alertError } from './util/prompts'
@@ -66,6 +67,9 @@ import { formatSize } from './util/sizes'
 import { useModelStore } from './pinia/models'
 
 const ipcRenderer = window.ipc
+
+// Icon size for the entire statusbar
+const ICON_SIZE = 12
 
 const modelStore = useModelStore()
 

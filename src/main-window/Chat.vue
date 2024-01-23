@@ -16,7 +16,9 @@
             Generated in {{  formatGenerationTime(message.generationTime) }}s
           </div>
         </div>
-        <div class="message-icon" v-html="messageIcon(message)">
+        <div class="message-icon">
+          <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
+          <vue-feather v-else type="code"></vue-feather>
         </div>
         <div class="message-body" v-html="md2html(message.content)">
         </div>
@@ -31,7 +33,8 @@
             {{ formatGenerationTime(currentGenerationTime) }}s
           </div>
         </div>
-        <div class="message-icon" v-html="CodeIcon">
+        <div class="message-icon">
+          <vue-feather type="code"></vue-feather>
         </div>
         <div class="message-body" v-html="md2html(responseText)">
         </div>
@@ -51,7 +54,9 @@
         ></textarea>
 
         <div id="chat-button-wrapper">
-          <button id="send" class="icon" v-on:click.prevent="prompt" v-html="SendIcon"></button>
+          <button id="send" class="icon" v-on:click.prevent="prompt">
+            <vue-feather type="send" v-bind:size="ICON_SIZE"></vue-feather>
+          </button>
           <button v-on:click.prevent="exportConversation">Export conversation</button>
         </div>
 
@@ -66,11 +71,6 @@
 <script setup lang="ts">
 import { ref, onUpdated, computed } from 'vue'
 
-import CodeIcon from './icons/code.svg'
-import UserIcon from './icons/user.svg'
-import SendIcon from './icons/send.svg'
-import StopIcon from './icons/stop-circle.svg'
-
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
 import { formatDate } from './util/dates'
@@ -82,6 +82,8 @@ import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
 import { useModelStore } from './pinia/models'
+
+const ICON_SIZE = 12
 
 const converter = new showdown.Converter()
 
@@ -152,21 +154,6 @@ function messageUser (role: 'user'|'assistant'): string {
  */
 function md2html (content: string): string {
   return converter.makeHtml(content)
-}
-
-/**
- * Returns an icon to identify a user, either the UserIcon, or the CodeIcon.
- *
- * @param   {ChatMessage}  message  The chat message
- *
- * @return  {string}                The correct icon
- */
-function messageIcon (message: ChatMessage): string {
-  if (message.role === 'user') {
-    return UserIcon
-  } else {
-    return CodeIcon
-  }
 }
 
 /**

@@ -41,6 +41,7 @@
     "eslint-config-standard-with-typescript": "^43.0.0",
     "eslint-plugin-n": "^16.6.2",
     "eslint-plugin-vue": "^9.20.0",
+    "feather-icons": "^4.29.1",
     "gguf": "^1.0.3",
     "got": "11.x.x",
     "highlight.js": "^11.9.0",
@@ -54,6 +55,8 @@
     "typescript": "^5.3.3",
     "uuid": "^9.0.1",
     "vue": "^3.4.10",
+    "vue-feather": "^2.0.0",
     "vue-loader": "^17.4.2"
-  }
+  },
+  "dependencies": {}
 }

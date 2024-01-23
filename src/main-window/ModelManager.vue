@@ -48,7 +48,9 @@
           <span>
             ({{ formatSize(store.modelDownloadStatus.bytes_per_second) }}/s; {{ formatSeconds(store.modelDownloadStatus.eta_seconds) }})
           </span>
-          <button class="icon" v-on:click="cancelDownload" v-html="CancelIcon" title="Abort download"></button>
+          <button class="icon" v-on:click="cancelDownload" title="Abort download">
+            <vue-feather type="x" size="12"></vue-feather>
+          </button>
         </div>
       </p>
 
@@ -103,7 +105,6 @@
 import type { ModelDescriptor } from 'src/main/ModelManager'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
-import CancelIcon from './icons/x.svg'
 import { formatSize } from './util/sizes'
 import { formatSeconds } from './util/dates'
 import { ref } from 'vue'

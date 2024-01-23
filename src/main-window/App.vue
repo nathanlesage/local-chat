@@ -9,8 +9,9 @@
       id="toggle-sidebar"
       title="Toggle sidebar"
       v-on:click="toggleSidebar"
-      v-html="MenuIcon"
-    ></div>
+    >
+      <vue-feather type="menu"></vue-feather>
+    </div>
 
     <Sidebar v-show="showSidebar"></Sidebar>
     <Chat></Chat>
@@ -29,7 +30,6 @@ import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
 import FirstStartGuide from './FirstStartGuide.vue'
-import MenuIcon from './icons/menu.svg'
 import { ref } from 'vue'
 
 const ipcRenderer = window.ipc
