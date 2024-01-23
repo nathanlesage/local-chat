@@ -59,7 +59,7 @@ jobs:
           rm -rf node_modules/node-llama-cpp/llamaBins/linux-arm64
           rm -rf node_modules/node-llama-cpp/llamaBins/linux-armv7l
           rm -rf node_modules/node-llama-cpp/llamaBins/linux-x64
-          rm -rf node_modules/node-llama-cpp/llamaBins/mac-arm
+          rm -rf node_modules/node-llama-cpp/llamaBins/mac-arm64
           rm -rf node_modules/node-llama-cpp/llamaBins/mac-x64
       - name: Prepare certificate
         run: |
