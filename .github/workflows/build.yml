@@ -51,6 +51,16 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
+      # Now, remove all platform/arch-incompatible prebuilt binaries, as
+      # signtool will error out if it finds such incompatible binaries instead
+      # of just signing them.
+      - name: Remove incompatible llama.cpp binaries
+        run: |
+          rm -rf node_modules/node-llama-cpp/llamaBins/linux-arm64
+          rm -rf node_modules/node-llama-cpp/llamaBins/linux-armv7l
+          rm -rf node_modules/node-llama-cpp/llamaBins/linux-x64
+          rm -rf node_modules/node-llama-cpp/llamaBins/mac-arm
+          rm -rf node_modules/node-llama-cpp/llamaBins/mac-x64
       - name: Prepare certificate
         run: |
           echo "${{ secrets.WIN32_CERT }}" | base64 --decode > "win32_cert.p12"
