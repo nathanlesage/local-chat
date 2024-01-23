@@ -27,5 +27,5 @@ git commit -m "chore: Bump version to v$NEW_VERSION"
 git push
 echo "Tagging commit ..."
 git tag -a "v$NEW_VERSION" -m "Release version v$NEW_VERSION"
-git push origin $NEW_VERSION
+git push origin "v$NEW_VERSION"
 echo "Done."
