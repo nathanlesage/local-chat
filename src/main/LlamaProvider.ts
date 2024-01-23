@@ -116,18 +116,14 @@ export class LlamaProvider {
    * @return  {ChatHistoryItem[]}            The converted messages
    */
   private convertConversationMessages (messages: ChatMessage[]): ChatHistoryItem[] {
-    if (messages.length % 2 !== 0) {
-      console.warn('Will omit messages from the conversation before feeding to the model: No paired selection.')
-    }
-
     const conv: ChatHistoryItem[] = []
 
-    for (let i = 0; i < messages.length - 1; i += 2) {
-      const user = messages[i]
-      const assistant = messages[i + 1]
-      conv.push({ type: 'user', text: user.content })
-      // For model response, see file LlamaChat.ts in node-llama-cpp
-      conv.push({ type: 'model', response: [assistant.content] })
+    for (const message of messages) {
+      if (message.role === 'user') {
+        conv.push({ type: 'user', text: message.content })
+      } else if (message.role === 'assistant') {
+        conv.push({ type: 'model', response: [message.content] })
+      }
     }
 
     return conv
