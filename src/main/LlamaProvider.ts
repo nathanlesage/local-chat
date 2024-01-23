@@ -14,6 +14,26 @@ import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import { ChatMessage } from './ConversationManager'
 
+/**
+ * Small utility function that determines how many GPU layers the model may use.
+ * By default, it only explicitly uses GPU layers if we're on Apple Silicon.
+ * Users can override this by passing `DISABLE_GPU=true`
+ *
+ * @return  {number|undefined}  A setting that can be passed to `gpuLayers`
+ */
+function getGPULayersToUse (): number|undefined {
+  if (process.env.DISABLE_GPU === 'true') {
+    return undefined
+  }
+
+  if (process.platform === 'darwin' && process.arch === 'arm64') {
+    return 100 // NOTE: Will use fewer GPU layers if the model has fewer layers.
+  }
+
+  // Default: unset
+  return undefined
+}
+
 export type LLAMA_STATUS = 'uninitialized'|'ready'|'loading'|'generating'|'error'
 
 export interface LlamaStatusNormal {
@@ -162,7 +182,8 @@ export class LlamaProvider {
     
     console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
     const model: LlamaModel = new resolved.LlamaModel({
-      modelPath: modelDescriptor.path
+      modelPath: modelDescriptor.path,
+      gpuLayers: getGPULayersToUse()
     } as LlamaModelOptions)
     console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.\x1b[0m`)
 
