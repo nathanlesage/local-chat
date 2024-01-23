@@ -399,7 +399,14 @@ button#send {
 }
 
 .message .message-body code {
+  font-family: 'Menlo', 'Inconsolata', 'Liberation Mono', monospace;
   overflow-x: auto;
+  border-radius: 4px;
+}
+
+.message .message-body code:not(.hljs) {
+  font-weight: bold;
+  color: rgb(69, 162, 231);
 }
 
 .message:not(:last-child) .message-body {
