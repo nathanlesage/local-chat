@@ -16,7 +16,7 @@
     <Sidebar v-show="showSidebar"></Sidebar>
     <Chat></Chat>
     <Statusbar></Statusbar>
-    <div id="resizer" v-on:mousedown="beginResizing"></div>
+    <div v-if="showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
     <FirstStartGuide
       v-if="showFirstStartGuide"
       v-on:close-modal="showFirstStartGuide = false"
