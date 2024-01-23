@@ -52,10 +52,8 @@
 
         <div id="chat-button-wrapper">
           <button id="send" class="icon" v-on:click.prevent="prompt" v-html="SendIcon"></button>
-          <button v-if="isGenerating" v-on:click.prevent="abortGeneration" class="icon" title="Stop generating" v-html="StopIcon"></button>
           <button v-on:click.prevent="exportConversation">Export conversation</button>
         </div>
-
 
       </template>
       <p v-else>
@@ -106,10 +104,37 @@ const currentGenerationTime = ref<number>(0)
 
 const isGenerating = ref<boolean>(false)
 
+/**
+ * Scrolls the chat wrapper down. This happens automatically, for example,
+ * during the generation of a response so the user can follow it being
+ * generated.
+ */
+function scrollChatDown () {
+  const elem = document.getElementById('chat-wrapper')
+  if (elem !== null) {
+    elem.scrollTop = elem.scrollHeight
+  }
+}
+
+/**
+ * Returns a class list string for the message, consisting of the message
+ * classes and dynamic ones depending on the message roles.
+ *
+ * @param   {ChatMessage}  message  The message to generate the classList for
+ *
+ * @return  {string}                The classList
+ */
 function messageClass (message: ChatMessage): string {
   return [ 'message', message.role ].join(' ')
 }
 
+/**
+ * Determins the human-readable user string for the message.
+ *
+ * @param   {string}  role       The role to be transformed
+ *
+ * @return  {string}             The human readabale user string
+ */
 function messageUser (role: 'user'|'assistant'): string {
   if (role === 'user') {
     return 'You'
@@ -118,10 +143,24 @@ function messageUser (role: 'user'|'assistant'): string {
   }
 }
 
+/**
+ * Turns a string of Markdown into HTML
+ *
+ * @param   {string}  content  The plain text
+ *
+ * @return  {string}           The HTML
+ */
 function md2html (content: string): string {
   return converter.makeHtml(content)
 }
 
+/**
+ * Returns an icon to identify a user, either the UserIcon, or the CodeIcon.
+ *
+ * @param   {ChatMessage}  message  The chat message
+ *
+ * @return  {string}                The correct icon
+ */
 function messageIcon (message: ChatMessage): string {
   if (message.role === 'user') {
     return UserIcon
@@ -130,22 +169,35 @@ function messageIcon (message: ChatMessage): string {
   }
 }
 
+/**
+ * Formats the generation time during response generation, rounded to one
+ * decimal
+ *
+ * @param   {number}  time  The time in milliseconds
+ *
+ * @return  {string}        The formatted time in the format `1.2`
+ */
 function formatGenerationTime (time: number): string {
   const t = String(Math.round(time / 100) / 10)
   return (!t.includes('.')) ? `${t}.0` : t
 }
 
-onUpdated(() => hljs.highlightAll())
+/**
+ * A listener to update all code block highlightints as soon as the DOM has been
+ * updated.
+ */
+onUpdated(() => { hljs.highlightAll() })
 
+/**
+ * Takes the user message and generates a response to it. This also registers
+ * a few listeners and callbacks so that there is some dynamics during
+ * generation.
+ */
 function prompt () {
   isGenerating.value = true
   const start = Date.now()
   currentGenerationTime.value = 0
   responseText.value = DEFAULT_RESPONSE_TEXT
-  const elem = document.getElementById('chat')
-  if (elem !== null) {
-    elem.scrollTop = elem.scrollHeight
-  }
 
   const off = ipcRenderer.on('answer-token-stream', (event, payload: string) => {
     if (responseText.value === DEFAULT_RESPONSE_TEXT) {
@@ -157,6 +209,7 @@ function prompt () {
 
   const int = setInterval(() => {
     currentGenerationTime.value = Date.now() - start
+    scrollChatDown() // While we are receiving a token stream, continuously scroll down.
   }, 100)
 
   ipcRenderer.invoke('prompt', message.value)
@@ -165,24 +218,25 @@ function prompt () {
       isGenerating.value = false
       clearInterval(int)
       off() // Remove event listener again
-      if (elem !== null) {
-        elem.scrollTop = elem.scrollHeight
-      }
     })
 
   // Immediately clear the value
   message.value = ''
 }
 
-function abortGeneration () {
-  ipcRenderer.send('stop-generating')
-}
-
+/**
+ * Changes the model for the given conversation
+ *
+ * @param   {string}  modelPath  The new model's path
+ */
 function selectModel (modelPath: string) {
   ipcRenderer.invoke('select-model', modelPath)
     .catch(err => alertError(err))
 }
 
+/**
+ * Initiates a conversation export
+ */
 function exportConversation () {
   if (currentConversation.value === undefined) {
     return
