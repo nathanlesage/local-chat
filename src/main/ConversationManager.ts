@@ -94,6 +94,10 @@ export class ConversationManager {
       this.deleteConversation(args)
     })
 
+    ipcMain.handle('delete-messages', async (event, { conversationId, messageIdx }) => {
+      return this.deleteMessages(conversationId, messageIdx)
+    })
+
     ipcMain.handle('select-model', async (event, args) => {
       const conv = this.getConversation(this.activeConversation)
       if (conv === undefined) {
@@ -242,6 +246,34 @@ export class ConversationManager {
 
     convo.description = description
     this.updateConversation(convo, false) // No need to force reload the model
+  }
+
+  /**
+   * Deletes all provided messages by index from the given conversation.
+   *
+   * @param   {string}    conversationId  The conversation in question
+   * @param   {number[]}  messageIdx      A list of all message indices to be removed
+   */
+  public deleteMessages (conversationId: string, messageIdx: number[]) {
+    const convo = this.conversations.find(c => c.id === conversationId)
+    if (convo === undefined) {
+      throw new Error('Cannot delete message from conversation: Not found')
+    }
+
+    // Ensure the message indices are sorted in descending order
+    // NOTE: We have to provide a sorting function because the default one sorts
+    // digit by digit (i.e. 17 < 2 because it starts with a 1), lmao
+    messageIdx = messageIdx.sort((a, b) => a - b).reverse()
+
+    for (const idx of messageIdx) {
+      if (idx < 0 || idx >= convo.messages.length) {
+        console.error(`Cannot remove message ${idx} from conversation: Index out of bounds.`)
+        continue
+      }
+      convo.messages.splice(idx, 1)
+    }
+
+    this.updateConversation(convo)
   }
 
   public deleteConversation (conversationId: string) {

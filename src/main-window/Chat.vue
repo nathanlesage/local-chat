@@ -6,7 +6,7 @@
       </p>
       <div
         v-if="currentConversation !== undefined"
-        v-for="message in currentConversation.messages"
+        v-for="(message, idx) in currentConversation.messages"
         v-bind:class="messageClass(message)"
       >
         <div class="message-header">
@@ -19,6 +19,11 @@
         <div class="message-icon">
           <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
           <vue-feather v-else type="code"></vue-feather>
+        </div>
+        <div class="message-trash">
+          <button class="icon" title="Delete this message" v-on:click="deleteMessage(idx)">
+            <vue-feather type="trash-2" size="12"></vue-feather>
+          </button>
         </div>
         <div class="message-body" v-html="md2html(message.content)">
         </div>
@@ -38,6 +43,10 @@
         </div>
         <div class="message-body" v-html="md2html(responseText)">
         </div>
+      </div>
+
+      <div id="regenerate-button-wrapper" v-if="!isGenerating">
+        <button v-on:click="regenerateLastResponse">Regenerate last response</button>
       </div>
 
       <!-- Text area -->
@@ -230,6 +239,56 @@ function exportConversation () {
   }
 
   ipcRenderer.invoke('export-conversation', currentConversation.value.id)
+    .catch(err => alertError(err))
+}
+
+/**
+ * Deletes the provided message by index from the converrsation
+ *
+ * @param   {number}  messageIdx      The message to delete
+ */
+function deleteMessage (messageIdx: number) {
+  if (currentConversation.value === undefined) {
+    return alertError(new Error('Cannot delete message from conversation: None active'))
+  }
+
+  ipcRenderer.invoke('delete-messages', {
+    conversationId: currentConversation.value.id,
+    messageIdx: [messageIdx]
+  })
+    .catch(err => alertError(err))
+}
+
+/**
+ * Composes an action to regenerate the last model response by deleting the two
+ * last messages (user question + model response) and re-prompting with the user
+ * question.
+ */
+function regenerateLastResponse () {
+  // Regenerating basically involves deleting the last two messages, and
+  // then prompting with the second-to-last (user) message
+  if (currentConversation.value === undefined) {
+    return alertError(new Error('Cannot regenerate last response: No conversation found'))
+  }
+
+  // First, assert that the last message is by the model
+  const msgs = currentConversation.value.messages
+  const messageCount = currentConversation.value.messages.length
+  if (msgs[messageCount - 1].role !== 'assistant' || msgs[messageCount - 2].role !== 'user') {
+    return alertError(new Error('Cannot regenerate last response: Last message not by assistant, or second-to-last message not by user.'))
+  }
+
+  const oldPrompt = msgs[messageCount - 2].content
+
+  ipcRenderer.invoke('delete-messages', {
+    conversationId: currentConversation.value.id,
+    messageIdx: [messageCount - 2, messageCount - 1]
+  })
+    .catch(err => alertError(err))
+    .then(() => {
+      message.value = oldPrompt
+      prompt()
+    })
 }
 </script>
 
@@ -243,6 +302,11 @@ div#chat-wrapper {
 div#chat {
   max-width: 600px;
   margin: 0 auto;
+}
+
+div#regenerate-button-wrapper {
+  text-align: center;
+  padding: 5px 0;
 }
 
 textarea#prompt {
@@ -271,9 +335,10 @@ button#send {
   padding: 6px 12px;
   margin: 10px 0;
   display: grid;
+  align-items: center;
   grid-template-columns: 40px auto;
   grid-template-areas: "icon header"
-  "icon body";
+  "trash body";
 }
 
 .message .message-header {
@@ -304,6 +369,25 @@ button#send {
 
 .message-header .message-timestamp, .message-header .message-generation-time {
   opacity: 0.5;
+}
+
+.message .message-trash {
+  grid-area: trash;
+}
+
+.message .message-trash button.icon {
+  aspect-ratio: 1;
+  display: none;
+  padding: 0;
+  margin: 0;
+}
+
+.message .message-trash button.icon:hover {
+  background-color: rgb(242, 132, 132);
+}
+
+.message:hover .message-trash button.icon {
+  display: initial;
 }
 
 .message .message-body {
