@@ -3461,6 +3461,11 @@ highlight.js@^11.9.0:
   resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-11.9.0.tgz#04ab9ee43b52a41a047432c8103e2158a1b8b5b0"
   integrity sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==
 
+highlightjs-copy@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/highlightjs-copy/-/highlightjs-copy-1.0.5.tgz#44fa17c2d3ed27d87ca8efcb67a937e7f760ce4a"
+  integrity sha512-e7vXcq4HyMqXEw9omt8riYMxEGSanjY2bLQL91Jk0zGnqEhs/pO/6X4tC0PQEVkGBqUdYUyfr06V/VEfQZ7Pmg==
+
 homedir-polyfill@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/homedir-polyfill/-/homedir-polyfill-1.0.3.tgz#743298cef4e5af3e194161fbadcc2151d3a058e8"

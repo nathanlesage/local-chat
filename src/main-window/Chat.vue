@@ -87,32 +87,34 @@ import showdown from 'showdown'
 import hljs from 'highlight.js'
 
 import 'highlight.js/styles/atom-one-dark.min.css'
+import 'highlightjs-copy/dist/highlightjs-copy.min.css'
 import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
 import { useModelStore } from './pinia/models'
-
-const ICON_SIZE = 12
-
-const converter = new showdown.Converter()
-
-const conversationStore = useConversationStore()
-const modelStore = useModelStore()
-
-const DEFAULT_RESPONSE_TEXT = 'Generating response…'
-
-const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
+import CopyButtonPlugin from 'highlightjs-copy'
 
 const ipcRenderer = window.ipc
 
+// Additional setup
+// Add copy button plugin
+hljs.addPlugin(new CopyButtonPlugin())
+const ICON_SIZE = 12
+const converter = new showdown.Converter()
+const DEFAULT_RESPONSE_TEXT = 'Generating response…'
+
+// Add stores
+const conversationStore = useConversationStore()
+const modelStore = useModelStore()
+
+// Refs and computed values
 const currentConversation = computed<Conversation|undefined>(() => {
   return conversationStore.getCurrentConversation()
 })
 
+const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
 const message = ref<string>('')
-
 const currentGenerationTime = ref<number>(0)
-
 const isGenerating = ref<boolean>(false)
 
 /**
