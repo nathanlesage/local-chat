@@ -64,7 +64,9 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         authors: 'Hendrik Erz',
-        description: 'LocalChat is your personal assistant: An LLM running locally on your computer.'
+        description: 'LocalChat is your personal assistant: An LLM running locally on your computer.',
+        certificateFile: process.env.WIN32_CERT,
+        certificatePassword: process.env.WIN32_CERT_PASS
       }
     },
     {

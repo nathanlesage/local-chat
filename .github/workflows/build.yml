@@ -51,8 +51,14 @@ jobs:
       - name: Retrieve package.json version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
+      - name: Prepare certificate
+        run: |
+          echo "${{ secrets.WIN32_CERT }}" | base64 --decode > "win32_cert.p12"
       - name: Package & Release
         run: yarn package:win-x64 && yarn release:win-x64
+        env:
+          WIN32_CERT: "win32_cert.p12"
+          WIN32_CERT_PASS: "${{ secrets.WIN32_CERT_PASS }}"
       - name: Cache installer
         uses: actions/upload-artifact@v3
         with:
