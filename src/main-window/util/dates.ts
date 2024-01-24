@@ -8,20 +8,27 @@ import { DateTime, Duration } from 'luxon'
  *                              `relative === false`; can be date, time, or
  *                              datetime).
  * @param   {boolean} relative  Whether the format should be relative (to
-*                               `Date.now()`), or absolute.
+ *                              `Date.now()`), or absolute.
+ * @param   {boolean} long      Whether to use a long date string
  *
  * @return  {string}            The formatted, human-readable date.
  */
-export function formatDate (date: number, type: 'date'|'time'|'datetime', relative: boolean = false): string {
+export function formatDate (
+  date: number,
+  type: 'date'|'time'|'datetime',
+  relative: boolean = false,
+  long: boolean = false
+): string {
   const dt = DateTime.fromMillis(date)
+  const style = long ? 'long' : 'short'
   if (relative) {
-    return dt.toRelative({ style: 'short', locale: 'en-US' }) ?? date.toString()
+    return dt.toRelative({ style, locale: 'en-US' }) ?? date.toString()
   } else if (type === 'date') {
-    return dt.toLocaleString({ dateStyle: 'short' })
+    return dt.toLocaleString({ dateStyle: style })
   } else if (type === 'time') {
-    return dt.toLocaleString({ timeStyle: 'short' })
+    return dt.toLocaleString({ timeStyle: style })
   } else {
-    return dt.toLocaleString({ timeStyle: 'short', dateStyle: 'short' })
+    return dt.toLocaleString({ timeStyle: style, dateStyle: style })
   }
 }
 
