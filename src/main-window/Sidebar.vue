@@ -13,8 +13,10 @@
         active: conversationStore.activeConversation === conv.id }"
       v-on:click="selectConversation(conv.id)"
     >
-      <h3 class="id">{{ conv.id }}</h3>
-      <span class="timestamp">{{ formatDate(conv.startedAt, 'date') }}</span>
+      <h3>{{ getModelName(conv) }}</h3>
+      <span class="timestamp" v-bind:title="`Conversation ${conv.id}`">
+        {{ formatDate(conv.startedAt, 'date') }}
+      </span>
 
       <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
       <input
@@ -62,6 +64,7 @@ import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
 import { formatDate } from './util/dates'
 import { ref } from 'vue'
+import { Conversation } from 'src/main/ConversationManager'
 
 const conversationStore = useConversationStore()
 const modelStore = useModelStore()
@@ -69,6 +72,13 @@ const ipcRenderer = window.ipc
 
 const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
+
+function getModelName (conversation: Conversation): string {
+  const sep = conversation.modelPath.includes('/') ? '/' : '\\'
+  const lastSlash = conversation.modelPath.lastIndexOf(sep) + 1
+  const lastDot = conversation.modelPath.lastIndexOf('.')
+  return conversation.modelPath.substring(lastSlash, lastDot)
+}
 
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
@@ -148,7 +158,7 @@ aside#conversations .conversation {
   cursor: default;
   margin-bottom: 10px;
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto 75px;
   grid-template-areas: "title time" "description description" "count actions";
   align-items: center;
 }
@@ -194,7 +204,10 @@ aside#conversations .conversation h3 {
 
 aside#conversations .conversation .timestamp {
   grid-area: time;
+  text-align: right;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
   opacity: 0.7;
 }
 
@@ -213,6 +226,9 @@ aside#conversations .conversation .message-count {
   display: block;
   opacity: 0.7;
   margin: 8px 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
   grid-area: count
 }
 
