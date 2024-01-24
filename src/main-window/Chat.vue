@@ -46,7 +46,7 @@
       </div>
 
       <div id="regenerate-button-wrapper" v-if="!isGenerating">
-        <button v-on:click="regenerateLastResponse">Regenerate last response</button>
+        <button v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</button>
       </div>
 
       <!-- Text area -->
@@ -262,6 +262,26 @@ function deleteMessage (messageIdx: number) {
 }
 
 /**
+ * Returns true if the current response can be regenerated.
+ *
+ * @return  {boolean} False if it is not possible, otherwise true.
+ */
+function canRegenerateLastResponse (): boolean {
+  if (currentConversation.value === undefined || currentConversation.value.messages.length < 2) {
+    return false
+  }
+
+  // First, assert that the last message is by the model
+  const msgs = currentConversation.value.messages
+  const messageCount = currentConversation.value.messages.length
+  if (msgs[messageCount - 1].role !== 'assistant' || msgs[messageCount - 2].role !== 'user') {
+    return false
+  }
+
+  return true
+}
+
+/**
  * Composes an action to regenerate the last model response by deleting the two
  * last messages (user question + model response) and re-prompting with the user
  * question.
@@ -269,18 +289,12 @@ function deleteMessage (messageIdx: number) {
 function regenerateLastResponse () {
   // Regenerating basically involves deleting the last two messages, and
   // then prompting with the second-to-last (user) message
-  if (currentConversation.value === undefined) {
-    return alertError(new Error('Cannot regenerate last response: No conversation found'))
+  if (!canRegenerateLastResponse() || currentConversation.value === undefined) {
+    return
   }
 
-  // First, assert that the last message is by the model
-  const msgs = currentConversation.value.messages
   const messageCount = currentConversation.value.messages.length
-  if (msgs[messageCount - 1].role !== 'assistant' || msgs[messageCount - 2].role !== 'user') {
-    return alertError(new Error('Cannot regenerate last response: Last message not by assistant, or second-to-last message not by user.'))
-  }
-
-  const oldPrompt = msgs[messageCount - 2].content
+  const oldPrompt = currentConversation.value.messages[messageCount - 2].content
 
   ipcRenderer.invoke('delete-messages', {
     conversationId: currentConversation.value.id,
