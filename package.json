@@ -1,6 +1,6 @@
 {
   "name": "LocalChat",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "LocalChat is your personal assistant: An LLM running locally on your computer.",
   "main": ".webpack/main",
   "author": "Hendrik Erz <hendrik@zettlr.com>",
