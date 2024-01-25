@@ -193,6 +193,10 @@ details summary {
   cursor: pointer;
 }
 
+li {
+  margin-top: 15px;
+}
+
 @media (prefers-color-scheme: light) {
   div#window-content.sidebar-hidden div#toggle-sidebar svg {
     color: #333;

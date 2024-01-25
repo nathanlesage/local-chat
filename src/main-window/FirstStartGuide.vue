@@ -95,7 +95,4 @@ const emit = defineEmits<{
 </script>
 
 <style>
-div#first-start-guide-modal li {
-  margin: 15px 0;
-}
 </style>

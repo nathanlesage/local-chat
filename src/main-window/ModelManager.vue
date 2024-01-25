@@ -1,5 +1,5 @@
 <template>
-  <Modal id="model-manager-modal" v-on:close-modal="$emit('close-modal')">
+  <Modal v-on:close-modal="$emit('close-modal')">
     <template v-slot:modal-header>
       <h1>Model Manager</h1>
     </template>
@@ -202,10 +202,6 @@ div#model-download-progress-wrapper {
 
 div#model-download-progress-wrapper progress {
   flex-grow: 1;
-}
-
-div#model-manager-modal ol li {
-  margin: 15px 0;
 }
 
 div.model-card {
