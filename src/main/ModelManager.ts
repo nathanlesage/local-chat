@@ -330,7 +330,7 @@ export class ModelManager {
       const cachedConfig = this.modelConfigCache.get(fullPath)
       const defaultConfig: ModelConfig = {
         prompt: 'auto',
-        contextLengthOverride: 2048
+        contextLengthOverride: 512 // N.B.: llama.cpp defaults to 512 as well.
       }
 
       const model: ModelDescriptor = {
