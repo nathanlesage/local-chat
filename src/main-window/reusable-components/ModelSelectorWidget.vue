@@ -12,8 +12,8 @@
 
 <script setup lang="ts">
 import type { ModelDescriptor } from 'src/main/ModelManager'
-import { useModelStore } from './pinia/models'
-import { formatSize } from './util/sizes'
+import { useModelStore } from '../pinia/models'
+import { formatSize } from '../util/sizes'
 
 const store = useModelStore()
 
