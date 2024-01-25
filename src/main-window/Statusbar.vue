@@ -16,7 +16,7 @@
     <!-- Model indication -->
     <div id="llama-status">
       <span>
-        {{ getLlamaStatusMessage(llamaStatus) }}
+        {{ llamaStatus.message }}
         (<code>
           <a
             v-if="modelStore.llamaInfo !== undefined"
@@ -95,14 +95,6 @@ ipcRenderer.invoke('get-llama-status')
     llamaStatus.value = status
   })
   .catch(err => alertError(err))
-
-function getLlamaStatusMessage (status: LlamaStatus) {
-  if (status.status === 'error') {
-    return status.error.message
-  } else {
-    return status.message
-  }
-}
 
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))

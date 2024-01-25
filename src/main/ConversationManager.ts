@@ -190,6 +190,7 @@ export class ConversationManager {
       modelPath: model.path,
       messages: []
     }
+
     this.conversations.push(newConversation)
     broadcastIPCMessage('conversations-updated', this.conversations)
 
