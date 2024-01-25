@@ -23,18 +23,10 @@ export interface AppNotification {
 
 export class AppProvider {
   private mainWindow: BrowserWindow|undefined
-  private showFirstStartGuide: boolean
 
   constructor () {
     // Allow the conversation manager to register its startup tasks.
     ConversationManager.getConversationManager()
-
-    this.showFirstStartGuide = false
-    ipcMain.handle('should-show-first-start-guide', (event, args) => {
-      return this.showFirstStartGuide
-    })
-
-    // END FIRST START GUIDE CODE
 
     ipcMain.on('prompt', (event, args: AppNotification) => {
       const opt: MessageBoxOptions = {
@@ -53,20 +45,8 @@ export class AppProvider {
   }
 
   async boot () {
-    await this.checkForFirstStart()
     setApplicationMenu()
     await this.showMainWindow()
-  }
-
-  async checkForFirstStart () {
-    const firstStartFile = path.join(app.getPath('userData'), 'first-start-done')
-    try {
-      await fs.access(firstStartFile)
-    } catch (err) {
-      this.showFirstStartGuide = true
-      // Immediately create the lock file so we don't show the guide again.
-      await fs.writeFile(firstStartFile, 'true', 'utf-8')
-    }
   }
 
   async showMainWindow () {

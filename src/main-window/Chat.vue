@@ -1,77 +1,79 @@
 <template>
-  <div id="chat-wrapper">
-    <div id="chat">
-      <p v-if="currentConversation !== undefined" style="display: flex; align-items: center;">
-        You are conversing with&nbsp;<ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
-      </p>
-      <div
-        v-if="currentConversation !== undefined"
-        v-for="(message, idx) in currentConversation.messages"
-        v-bind:class="messageClass(message)"
-      >
-        <div class="message-header">
-          <h4>{{ messageUser(message.role) }}:</h4>
-          <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
-          <div class="message-generation-time" v-if="message.generationTime > 0">
-            Generated in {{  formatGenerationTime(message.generationTime) }}s
-          </div>
-        </div>
-        <div class="message-icon">
-          <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
-          <vue-feather v-else type="code"></vue-feather>
-        </div>
-        <div class="message-trash">
-          <LCButton icon="trash-2" v-bind:square="true" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
-        </div>
-        <div class="message-body" v-html="md2html(message.content)">
+  <div id="chat">
+    <p v-if="currentConversation !== undefined" style="display: flex; align-items: center;">
+      You are conversing with&nbsp;<ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
+    </p>
+    <p v-if="currentConversation !== undefined && currentConversation.messages.length === 0">
+      This is the start of your conversation. Send a message to start chatting.
+      <!-- TODO: Maybe add some example prompts here? -->
+    </p>
+    <div
+      v-if="currentConversation !== undefined"
+      v-for="(message, idx) in currentConversation.messages"
+      v-bind:class="messageClass(message)"
+    >
+      <div class="message-header">
+        <h4>{{ messageUser(message.role) }}:</h4>
+        <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
+        <div class="message-generation-time" v-if="message.generationTime > 0">
+          Generated in {{  formatGenerationTime(message.generationTime) }}s
         </div>
       </div>
-
-      <div id="generating-message" class="message assistant" v-if="isGenerating">
-        <div class="message-header">
-          <h4>{{ messageUser('assistant') }}:</h4>
-          <!-- While generating we only show a loading spinner -->
-          <div class="message-timestamp" v-html="LoadingSpinner"></div>
-          <div class="message-generation-time">
-            {{ formatGenerationTime(currentGenerationTime) }}s
-          </div>
-        </div>
-        <div class="message-icon">
-          <vue-feather type="code"></vue-feather>
-        </div>
-        <div class="message-body" v-html="md2html(responseText)">
-        </div>
+      <div class="message-icon">
+        <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
+        <vue-feather v-else type="code"></vue-feather>
       </div>
-
-      <div id="regenerate-button-wrapper" v-if="!isGenerating">
-        <LCButton v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</LCButton>
+      <div class="message-trash">
+        <LCButton icon="trash-2" v-bind:square="true" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
       </div>
-
-      <!-- Text area -->
-      <template v-if="currentConversation !== undefined">
-        <textarea
-          v-if="currentConversation !== undefined"
-          v-model="message"
-          id="prompt"
-          name="prompt"
-          placeholder="Type to chat (Shift+Enter to send)"
-          v-on:keydown.enter.shift.exact.prevent="prompt"
-          v-bind:disabled="isGenerating"
-          autofocus
-        ></textarea>
-
-        <div id="chat-button-wrapper">
-          <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
-            Send
-          </LCButton>
-          <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
-        </div>
-
-      </template>
-      <p v-else>
-        Create a new conversation to get started.
-      </p>
+      <div class="message-body" v-html="md2html(message.content)">
+      </div>
     </div>
+
+    <div id="generating-message" class="message assistant" v-if="isGenerating">
+      <div class="message-header">
+        <h4>{{ messageUser('assistant') }}:</h4>
+        <!-- While generating we only show a loading spinner -->
+        <div class="message-timestamp" v-html="LoadingSpinner"></div>
+        <div class="message-generation-time">
+          {{ formatGenerationTime(currentGenerationTime) }}s
+        </div>
+      </div>
+      <div class="message-icon">
+        <vue-feather type="code"></vue-feather>
+      </div>
+      <div class="message-body" v-html="md2html(responseText)">
+      </div>
+    </div>
+
+    <div id="regenerate-button-wrapper" v-if="!isGenerating">
+      <LCButton v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</LCButton>
+    </div>
+
+    <!-- Text area -->
+    <template v-if="currentConversation !== undefined">
+      <textarea
+        v-if="currentConversation !== undefined"
+        v-model="message"
+        id="prompt"
+        name="prompt"
+        placeholder="Type to chat (Shift+Enter to send)"
+        v-on:keydown.enter.shift.exact.prevent="prompt"
+        v-bind:disabled="isGenerating"
+        autofocus
+      ></textarea>
+
+      <div id="chat-button-wrapper">
+        <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
+          Send
+        </LCButton>
+        <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
+      </div>
+
+    </template>
+    <p v-else>
+      Create a new conversation to get started.
+    </p>
   </div>
 </template>
 
@@ -308,12 +310,6 @@ function regenerateLastResponse () {
 </script>
 
 <style>
-div#chat-wrapper {
-  grid-area: chat;
-  overflow-y: auto;
-  padding: 40px;
-}
-
 div#chat {
   max-width: 600px;
   margin: 0 auto;

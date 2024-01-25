@@ -14,14 +14,12 @@
     </div>
 
     <Sidebar v-show="showSidebar"></Sidebar>
-    <Chat></Chat>
+    <div id="chat-wrapper">
+      <Chat v-if="modelStore.models.length > 0"></Chat>
+      <WelcomeMessage v-else></WelcomeMessage>
+    </div>
     <Statusbar></Statusbar>
     <div v-if="showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
-    <FirstStartGuide
-      v-if="showFirstStartGuide"
-      v-on:close-modal="showFirstStartGuide = false"
-    >
-    </FirstStartGuide>
   </div>
 </template>
 
@@ -29,22 +27,17 @@
 import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
-import FirstStartGuide from './FirstStartGuide.vue'
 import { ref } from 'vue'
+import { useModelStore } from './pinia/models'
+import WelcomeMessage from './WelcomeMessage.vue'
 
-const ipcRenderer = window.ipc
+const modelStore = useModelStore()
 
 const sidebarWidth = ref<string>('200px')
 const showSidebar = ref<boolean>(true)
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
-const showFirstStartGuide = ref<boolean>(false)
-
-ipcRenderer.invoke('should-show-first-start-guide')
-  .then((res: boolean) => {
-    showFirstStartGuide.value = res
-  })
 
 function beginResizing (event: MouseEvent) {
   if (!showSidebar.value) {
@@ -82,18 +75,18 @@ function toggleSidebar () {
 }
 
 /* Loading spinner styles */
-.spinner_V8m1{
+.spinner_V8m1 {
   transform-origin: center;
   animation:spinner_zKoa 2s linear infinite
 }
-.spinner_V8m1 circle{
+.spinner_V8m1 circle {
   stroke-linecap: round;
   animation: spinner_YpZS 1.5s ease-in-out infinite;
 }
-@keyframes spinner_zKoa{
+@keyframes spinner_zKoa {
   100% { transform: rotate(360deg) }
 }
-@keyframes spinner_YpZS{
+@keyframes spinner_YpZS {
   0% {
     stroke-dasharray: 0 150;
     stroke-dashoffset:0;
@@ -117,6 +110,12 @@ div#app {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+div#chat-wrapper {
+  grid-area: chat;
+  overflow-y: auto;
+  padding: 40px;
 }
 
 div#toggle-sidebar {
