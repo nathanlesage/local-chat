@@ -36,17 +36,10 @@ function getGPULayersToUse (): number|undefined {
 
 export type LLAMA_STATUS = 'uninitialized'|'ready'|'loading'|'generating'|'error'
 
-export interface LlamaStatusNormal {
-  status: 'uninitialized'|'ready'|'loading'|'generating'
+export interface LlamaStatus {
+  status: 'uninitialized'|'ready'|'loading'|'generating'|'error'
   message: string
 }
-
-export interface LlamaStatusError {
-  status: 'error'
-  error: Error
-}
-
-export type LlamaStatus  = LlamaStatusNormal|LlamaStatusError
 
 /**
  * Retrieves the Llama module. This is to fix a BUG (see)
@@ -119,12 +112,32 @@ export class LlamaProvider {
     return this.loadedModel
   }
 
-  private setStatus (status: LLAMA_STATUS, payload: string|Error) {
-    if (status === 'error' && typeof payload !== 'string') {
-      this.status = { status, error: payload }
-    } else if (status !== 'error' && typeof payload === 'string') {
-      this.status = { status, message: payload }
+  /**
+   * Sets the status of the provider and notifies any processes that listen.
+   *
+   * @param   {LLAMA_STATUS}  status   The new status
+   * @param   {string}        payload  An optional message
+   */
+  private setStatus (status: LLAMA_STATUS, payload?: string) {
+    if (payload === undefined) {
+      switch (status) {
+        case 'error':
+          payload = 'Provider encountered an error'
+          break
+        case 'generating':
+          payload = 'Generating'
+          break
+        case 'loading':
+          payload = 'Model loading'
+          break
+        case 'ready':
+          payload = `Model ready (ctx: ${this.loadedModel?.config.contextLengthOverride ?? 'N/A'})`
+          break
+        case 'uninitialized':
+          payload = 'Provider uninitialized'
+      }
     }
+    this.status = { status, message: payload }
     broadcastIPCMessage('llama-status-updated', this.status)
   }
 
@@ -173,11 +186,12 @@ export class LlamaProvider {
       JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation) &&
       !force // Allow forcefully reloading model, even if nothing else has changed (useful especially for config changes.)
     ) {
+      console.warn(`Ignoring attempt to reload model, since nothing has changed and the force-flag was not present.`)
       return // Nothing to do
     }
 
     const resolved = await llamaModule()
-    
+    this.lastLoadedConversationHistory = structuredClone(previousConversation)    
     this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
     
     console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
@@ -203,7 +217,7 @@ export class LlamaProvider {
 
     this.loadedModel = modelDescriptor
 
-    this.setStatus('ready', 'Model ready')
+    this.setStatus('ready')
 
     broadcastIPCMessage('loaded-model-updated', this.loadedModel)
   }
@@ -233,11 +247,11 @@ export class LlamaProvider {
         signal: abortController.signal
       })
       ipcMain.off('stop-generating', callback)
-      this.setStatus('ready', 'Model ready')
+      this.setStatus('ready')
       return answer
     } catch (err) {
       ipcMain.off('stop-generating', callback)
-      this.setStatus('ready', 'Model ready')
+      this.setStatus('ready')
       return chunks
     }
   }
