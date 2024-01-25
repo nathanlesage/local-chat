@@ -172,6 +172,7 @@ html, body {
   padding: 0;
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  cursor: default;
 }
 
 body {
@@ -180,7 +181,7 @@ body {
   background-color: white;
 }
 
-select, button {
+select {
   background-color: rgb(210, 210, 210);
   border: none;
   padding: 4px 10px;
@@ -190,21 +191,6 @@ select, button {
 
 details summary {
   cursor: pointer;
-}
-
-button {
-  height: 23px;
-}
-
-button.icon {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
-
-button svg {
-  width: 12px;
-  height: 12px;
 }
 
 @media (prefers-color-scheme: light) {

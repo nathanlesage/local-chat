@@ -21,9 +21,7 @@
           <vue-feather v-else type="code"></vue-feather>
         </div>
         <div class="message-trash">
-          <button class="icon" title="Delete this message" v-on:click="deleteMessage(idx)">
-            <vue-feather type="trash-2" size="12"></vue-feather>
-          </button>
+          <LCButton icon="trash-2" v-bind:square="true" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
         </div>
         <div class="message-body" v-html="md2html(message.content)">
         </div>
@@ -46,7 +44,7 @@
       </div>
 
       <div id="regenerate-button-wrapper" v-if="!isGenerating">
-        <button v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</button>
+        <LCButton v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</LCButton>
       </div>
 
       <!-- Text area -->
@@ -63,10 +61,10 @@
         ></textarea>
 
         <div id="chat-button-wrapper">
-          <button id="send" class="icon" v-on:click.prevent="prompt">
-            <vue-feather type="send" v-bind:size="ICON_SIZE"></vue-feather>
-          </button>
-          <button v-on:click.prevent="exportConversation">Export conversation</button>
+          <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
+            Send
+          </LCButton>
+          <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
         </div>
 
       </template>
@@ -91,6 +89,7 @@ import 'highlightjs-copy/dist/highlightjs-copy.min.css'
 import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './ModelSelectorWidget.vue'
+import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
 
@@ -342,11 +341,6 @@ textarea#prompt {
   justify-content: flex-start;
 }
 
-button#send {
-  background-color: rgb(95, 155, 216);
-  color: white;
-}
-
 .message {
   padding: 6px 12px;
   margin: 10px 0;
@@ -392,14 +386,7 @@ button#send {
 }
 
 .message .message-trash button.icon {
-  aspect-ratio: 1;
   display: none;
-  padding: 0;
-  margin: 0;
-}
-
-.message .message-trash button.icon:hover {
-  background-color: rgb(242, 132, 132);
 }
 
 .message:hover .message-trash button.icon {
@@ -410,6 +397,7 @@ button#send {
   hyphens: auto;
   grid-area: body;
   overflow-x: hidden;
+  cursor: text;
 }
 
 .message .message-body code {
@@ -438,10 +426,6 @@ button#send {
 
   .message:not(:last-child) .message-body {
     border-bottom-color: rgba(255, 255, 255, .2);
-  }
-
-  svg {
-    stroke: #eee;
   }
 }
 </style>

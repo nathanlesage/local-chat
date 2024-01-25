@@ -35,25 +35,20 @@
       
       <span class="message-count">{{ conv.messages.length }} messages</span>
       <div class="action-button-wrapper">
-        <button
+        <LCButton
           v-if="conversationRename === undefined"
-          class="rename icon"
+          icon="edit"
+          square="true"
           v-on:click.prevent.stop="startChangeDescription(conv.id)"
           title="Change description"
         >
-          <vue-feather type="edit" size="12"></vue-feather>
-        </button>
-        <button class="delete icon" v-on:click.prevent.stop="deleteConversation(conv.id)" title="Delete conversation">
-          <vue-feather type="trash-2" size="12"></vue-feather>
-        </button>
+        </LCButton>
+        <LCButton icon="trash-2" type="danger" square="true" v-on:click.prevent.stop="deleteConversation(conv.id)" title="Delete conversation"></LCButton>
       </div>
     </div>
 
     <div>
-      <button
-        class="delete"
-        v-on:click="newConversation"
-      >New conversation</button>
+      <LCButton v-on:click="newConversation">New conversation</LCButton>
     </div>
   </aside>
 </template>
@@ -65,6 +60,7 @@ import { alertError } from './util/prompts'
 import { formatDate } from './util/dates'
 import { ref } from 'vue'
 import { Conversation } from 'src/main/ConversationManager'
+import LCButton from './reusable-components/LCButton.vue'
 
 const conversationStore = useConversationStore()
 const modelStore = useModelStore()
@@ -168,17 +164,8 @@ aside#conversations .conversation {
   grid-template-areas: "title time" "description description" "count actions";
   align-items: center;
 }
-
-aside#conversations .conversation button.delete {
-  background-color: rgb(64, 1, 1);
-  color: white;
-}
-
+/** TODO SQUARE */
 aside#conversations .conversation button {
-  padding: 2px 4px;
-  margin: 0 2px;
-  border-radius: 4px;
-  aspect-ratio: 1;
   display: none;
 }
 
@@ -193,10 +180,6 @@ aside#conversations .conversation .action-button-wrapper {
 
 aside#conversations .conversation input[type=text] {
   grid-area: description;
-}
-
-aside#conversations .conversation button.delete:hover {
-  background-color: rgb(242, 132, 132);
 }
 
 aside#conversations .conversation h3 {
@@ -241,10 +224,6 @@ aside#conversations .conversation .message-count {
 @media (prefers-color-scheme: dark) {
   div#sidebar {
     background-color: #333;
-  }
-
-  aside#conversations .conversation button.delete {
-    background-color: rgb(64, 1, 1);
   }
 }
 </style>

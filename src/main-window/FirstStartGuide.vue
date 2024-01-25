@@ -7,8 +7,8 @@
       <div v-html="currentStepText"></div>
     </template>
     <template v-slot:modal-footer>
-      <button v-if="currentStep < FIRST_START_GUIDE_PAGES.length" v-on:click="currentStep++">Next</button>
-      <button v-else v-on:click="emit('close-modal')">Close</button>
+      <LCButton v-if="currentStep < FIRST_START_GUIDE_PAGES.length" v-on:click="currentStep++">Next</LCButton>
+      <LCButton v-else v-on:click="emit('close-modal')">Close</LCButton>
     </template>
   </Modal>
 </template>
@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import Modal from './util/Modal.vue'
+import LCButton from './reusable-components/LCButton.vue';
 import showdown from 'showdown'
 
 const converter = new showdown.Converter()

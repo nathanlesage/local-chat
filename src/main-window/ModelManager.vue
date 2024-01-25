@@ -34,7 +34,7 @@
       <p v-if="!store.modelDownloadStatus.isDownloading">
         Download a new model by pasting its HTTP-URL into this textfield:
         <input id="model-download-field" type="text" placeholder="https://huggingface.co/TheBloke/phi-2-GGUF/resolve/main/phi-2.Q2_K.gguf" v-model="modelPath">
-        <button v-on:click="downloadModel">Download</button>
+        <LCButton v-on:click="downloadModel" icon="download" type="primary">Download</LCButton>
       </p>
       <p v-else>
         <!-- Display download status -->
@@ -48,15 +48,14 @@
           <span>
             ({{ formatSize(store.modelDownloadStatus.bytes_per_second) }}/s; {{ formatSeconds(store.modelDownloadStatus.eta_seconds) }})
           </span>
-          <button class="icon" v-on:click="cancelDownload" title="Abort download">
-            <vue-feather type="x" size="12"></vue-feather>
-          </button>
+          <LCButton icon="x" type="danger" square="true" v-on:click="cancelDownload" title="Abort download">
+          </LCButton>
         </div>
       </p>
 
       <h2>Available models</h2>
-      <button v-on:click="forceReloadModels()">Force reload model metadata</button>
-      <button v-on:click="forceReloadModels(true)">Clear config</button>
+      <LCButton v-on:click="forceReloadModels()">Force reload model metadata</LCButton>
+      <LCButton v-on:click="forceReloadModels(true)">Clear config</LCButton>
       <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
         <h4>{{ getModelName(model) }}</h4>
         <span class="size">{{ formatSize(model.bytes) }}</span>
@@ -96,7 +95,7 @@
       </p>
     </template>
     <template v-slot:modal-footer>
-      <button v-on:click="openModelDirectory">Open model directory</button>
+      <LCButton v-on:click="openModelDirectory">Open model directory</LCButton>
     </template>
   </Modal>
 </template>
@@ -110,6 +109,7 @@ import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 import { formatNumber } from './util/numbers'
 import Modal from './util/Modal.vue'
+import LCButton from './reusable-components/LCButton.vue'
 
 const store = useModelStore()
 

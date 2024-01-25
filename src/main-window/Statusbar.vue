@@ -1,6 +1,9 @@
 <template>
   <div id="statusbar">
-    <div v-if="modelStore.modelDownloadStatus.isDownloading" id="model-download-status">
+    <div
+      v-if="modelStore.modelDownloadStatus.isDownloading" id="model-download-status"
+      v-bind:title="`Downloading model ${modelStore.modelDownloadStatus.name} (${formatSize(modelStore.modelDownloadStatus.size_total)})`"
+    >
       <progress
         min="0"
         v-bind:max="modelStore.modelDownloadStatus.size_total"
@@ -9,9 +12,8 @@
       <span class="monospace">
         ({{ formatSize(modelStore.modelDownloadStatus.bytes_per_second) }}/s; {{ formatSeconds(modelStore.modelDownloadStatus.eta_seconds) }})
       </span>
-      <button class="icon" v-on:click="cancelDownload" title="Abort download">
-        <vue-feather type="x" v-bind:size="ICON_SIZE"></vue-feather>
-      </button>
+      <LCButton icon="x" type="danger" square="true" v-on:click="cancelDownload" title="Abort download">
+      </LCButton>
     </div>
     <!-- Model indication -->
     <div id="llama-status">
@@ -28,26 +30,28 @@
           <span v-else title="Llama.cpp release is unknown">unknown</span>
         </code>)
       </span>
-      <button
+      <LCButton
         v-if="!isGenerating && !isLoading"
         v-on:click.prevent="forceReloadModel"
-        class="icon"
+        icon="repeat"
+        square="true"
         title="Force reload model"
       >
-        <vue-feather type="repeat" v-bind:size="ICON_SIZE"></vue-feather>
-      </button>
+    </LCButton>
 
-      <button
+      <LCButton
         v-if="isGenerating"
         v-on:click.prevent="abortGeneration"
-        class="icon"
+        square="true"
+        icon="stop-circle"
         title="Stop generating"
       >
-        <vue-feather type="stop-circle" v-bind:size="ICON_SIZE"></vue-feather>
-      </button>
+    </LCButton>
     </div>
     <div>
-      <button v-on:click="showModelManager = !showModelManager">Manage Models</button>
+      <LCButton v-on:click="showModelManager = !showModelManager">
+        Manage Models
+      </LCButton>
     </div>
 
     <ModelManager
@@ -62,6 +66,7 @@ import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/main/LlamaProvider'
 import { alertError } from './util/prompts'
 import ModelManager from './ModelManager.vue'
+import LCButton from './reusable-components/LCButton.vue'
 import { formatSeconds } from './util/dates'
 import { formatSize } from './util/sizes'
 import { useModelStore } from './pinia/models'
@@ -132,15 +137,6 @@ div#statusbar div {
 
 div#statusbar .monospace {
   font-family: Menlo, "Liberation Mono", monospace;
-}
-
-div#statusbar svg {
-  stroke: #eee;
-}
-
-div#statusbar button svg {
-  color: #333;
-  stroke: #333;
 }
 
 @media (prefers-color-scheme: dark) {
