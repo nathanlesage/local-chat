@@ -143,7 +143,7 @@ function isQuantized (model: ModelDescriptor) {
 }
 
 function getContextLength (model: ModelDescriptor) {
-  const SUPPORTED_LENGTHS = [1024, 2048, 4096, 8192, 16384, 32768, 65536]
+  const SUPPORTED_LENGTHS = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
 
   let nativeContextLength = Infinity
   const arch = model.metadata?.general.architecture
