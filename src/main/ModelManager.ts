@@ -216,11 +216,29 @@ export class ModelManager {
     return models.find(m => m.path === modelId) !== undefined
   }
 
+  /**
+   * Retrieves the model specified with the given modelId. If `provideFallback`
+   * is set to `true`, it may return a different loaded model. If it is false,
+   * or if there are no models available, `getModel` will return undefined.
+   *
+   * @param   {string}                              modelId  The model ID
+   *
+   * @return  {Promise<ModelDescriptor|undefined>}           The descriptor, or
+   *                                                         undefined.
+   */
   public async getModel (modelId: string): Promise<ModelDescriptor|undefined>
   public async getModel (modelId: string, provideFallback: true): Promise<ModelDescriptor>
   public async getModel (modelId: string, provideFallback?: true): Promise<ModelDescriptor|undefined> {
     const models = await this.getAvailableModels()
-    return models.find(m => m.path === modelId)
+    const exactMatch = models.find(m => m.path === modelId)
+
+    if (exactMatch !== undefined) {
+      return exactMatch
+    }
+
+    if (provideFallback) {
+      return models[0]
+    }
   }
 
   private async getModelMetadata (modelPath: string) {
