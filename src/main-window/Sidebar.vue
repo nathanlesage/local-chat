@@ -74,10 +74,16 @@ const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
 
 function getModelName (conversation: Conversation): string {
-  const sep = conversation.modelPath.includes('/') ? '/' : '\\'
-  const lastSlash = conversation.modelPath.lastIndexOf(sep) + 1
-  const lastDot = conversation.modelPath.lastIndexOf('.')
-  return conversation.modelPath.substring(lastSlash, lastDot)
+  const model = modelStore.getModelDescriptor(conversation.modelPath)
+  if (model === undefined) {
+    return 'Unknown model'
+  }
+
+  if (model.metadata?.general.name !== undefined) {
+    return model.metadata.general.name
+  } else {
+    return model.name
+  }
 }
 
 function newConversation () {

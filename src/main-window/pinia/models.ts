@@ -55,5 +55,9 @@ export const useModelStore = defineStore('model-store', () => {
     modelDownloadStatus.value = newStatus
   })
 
-  return { models, currentModel, modelDownloadStatus, llamaInfo }
+  function getModelDescriptor (modelId: string): ModelDescriptor|undefined {
+    return models.value.find(model => model.path === modelId)
+  }
+
+  return { models, currentModel, modelDownloadStatus, llamaInfo, getModelDescriptor }
 })
