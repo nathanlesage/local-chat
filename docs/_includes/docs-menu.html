@@ -1,0 +1,16 @@
+<nav
+  id="documentation-navigation"
+  style="float: right; font-size: 90%; padding: 10px; margin: 10px 40px; border: 1px solid rgb(81, 132, 118);"
+>
+  <strong>Guide Navigation</strong>
+  <ul>
+    {% assign filtered_pages = site.pages | where_exp: 'item', "item.url contains '.html'" %}
+    {% for item in filtered_pages | sort %}
+    {% if page.url contains item.url %}
+    <li><span>{{ item.title }}</span></li>
+    {% else %}
+    <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+</nav>

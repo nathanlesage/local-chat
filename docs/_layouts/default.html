@@ -22,13 +22,20 @@
         <a href="{{ site.github.repository_url }}" class="btn">View on GitHub</a>
       {% endif %}
       <a href="{{ site.github.repository_url }}/releases" class="btn">Download</a>
+      <a href="{{ 'guide' | relative_url }}" class="btn">Documentation</a>
       {% if site.show_downloads %}
         <a href="{{ site.github.zip_url }}" class="btn">Download .zip</a>
         <a href="{{ site.github.tar_url }}" class="btn">Download .tar.gz</a>
       {% endif %}
     </header>
-
+    
     <main id="content" class="main-content" role="main">
+      {% include breadcrumbs.html %}
+
+      {% if page.url contains '/guide/' %}
+        {% include docs-menu.html %}
+      {% endif %}
+
       {{ content }}
 
       <footer class="site-footer">

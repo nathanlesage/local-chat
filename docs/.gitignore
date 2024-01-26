@@ -1,0 +1,5 @@
+# Ignore the built site
+_site
+
+# Do not commit the lockfile, since GH will ignore that anyways.
+Gemfile.lock
