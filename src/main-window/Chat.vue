@@ -100,8 +100,10 @@ const ipcRenderer = window.ipc
 // Additional setup
 // Add copy button plugin
 hljs.addPlugin(new CopyButtonPlugin())
-const ICON_SIZE = 12
-const converter = new showdown.Converter()
+const converter = new showdown.Converter({
+  tables: true,
+  smoothLivePreview: true
+})
 const DEFAULT_RESPONSE_TEXT = 'Generating response…'
 
 // Add stores
@@ -415,6 +417,25 @@ textarea#prompt {
   grid-area: icon;
 }
 
+/** Basic table styling */
+.message table {
+  border-collapse: collapse;
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+}
+.message table th {
+  border-bottom: 1px solid rgb(128, 128, 128);
+}
+
+.message table th, .message table td {
+  padding: 4px 8px;
+}
+
+.message table tr:nth-child(2n) {
+  background-color: rgb(214, 224, 247);
+}
+
 @media (prefers-color-scheme: dark) {
   textarea#prompt {
     background-color: rgb(33, 33, 33);
@@ -423,6 +444,11 @@ textarea#prompt {
   .message:not(:last-child) .message-body {
     border-bottom-color: rgba(255, 255, 255, .2);
   }
+
+
+.message table tr:nth-child(2n) {
+  background-color: rgb(55, 60, 69);
+}
 }
 </style>
 src/main/ConversationManager
