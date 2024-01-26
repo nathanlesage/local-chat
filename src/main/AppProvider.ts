@@ -5,14 +5,12 @@ import {
   ipcMain,
   dialog,
   shell,
-  Menu,
-  MenuItem,
   type MessageBoxOptions
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
 import path from 'path'
-import { promises as fs } from 'fs'
 import { setApplicationMenu } from './util/set-application-menu'
+import { showContextMenu } from './util/show-context-menu'
 
 export interface AppNotification {
   title: string
@@ -105,41 +103,7 @@ export class AppProvider {
 
     // Basic context menu
     this.mainWindow.webContents.on('context-menu', (event, params) => {
-      const menu = new Menu()
-    
-      // In case the user right-clicked on a misspelled word, this allows
-      // handling this.
-      for (const suggestion of params.dictionarySuggestions) {
-        menu.append(new MenuItem({
-          label: suggestion,
-          click: () => this.mainWindow?.webContents.replaceMisspelling(suggestion)
-        }))
-      }
-    
-      // Allow users to add the misspelled word to the dictionary
-      if (params.misspelledWord) {
-        menu.append(
-          new MenuItem({
-            label: 'Add to dictionary',
-            click: () => this.mainWindow?.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
-          })
-        )
-      }
-
-      const { canUndo, canRedo, canCut, canCopy, canPaste, canDelete, canSelectAll } = params.editFlags
-      const editable = params.isEditable
-      menu.append(new MenuItem({ type: 'separator' }))
-      menu.append(new MenuItem({ role: 'undo', enabled: canUndo && editable }))
-      menu.append(new MenuItem({ role: 'redo', enabled: canRedo && editable }))
-      menu.append(new MenuItem({ type: 'separator' }))
-      menu.append(new MenuItem({ role: 'cut', enabled: canCut && editable }))
-      menu.append(new MenuItem({ role: 'copy', enabled: canCopy }))
-      menu.append(new MenuItem({ role: 'paste', enabled: canPaste && editable }))
-      menu.append(new MenuItem({ role: 'delete', enabled: canDelete && editable }))
-      menu.append(new MenuItem({ type: 'separator' }))
-      menu.append(new MenuItem({ role: 'selectAll', enabled: canSelectAll }))
-
-      menu.popup()
+      showContextMenu(event, params, this.mainWindow)
     })
   }
 }
