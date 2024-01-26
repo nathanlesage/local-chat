@@ -1,4 +1,4 @@
-import { app, ipcMain, shell } from 'electron'
+import { app, ipcMain, shell, dialog } from 'electron'
 import path from 'path'
 import gguf from 'gguf'
 import { promises as fs, createWriteStream } from 'fs'
@@ -256,12 +256,38 @@ export class ModelManager {
     broadcastIPCMessage('model-download-status-updated', this.downloadStatus)
   }
 
+  /**
+   * Downloads a model. Will check that it has the appropriate filename
+   * extension (*.gguf) and that the server actually responds with a binary data
+   * stream.
+   *
+   * @param   {string}  modelLocation  The model to download (absolute URL)
+   */
   async downloadModel (modelLocation: string) {
+    if (!modelLocation.endsWith('.gguf')) {
+      await dialog.showMessageBox({
+        title: 'Could not download model',
+        message: 'Could not download model: Expected the URL to end with ".gguf".'
+      })
+      return
+    }
+
     this.downloadCancelFlag = false
     console.log(`Downloading model from ${modelLocation} ...`)
     const destination = path.join(this.modelDirectory, path.basename(modelLocation))
     const writeStream = createWriteStream(destination)
     const readStream = got.stream(modelLocation) // as unknown as ReadStream
+
+    readStream.on('response', (response) => {
+      const contentType = response.headers['content-type']
+      if (contentType !== 'binary/octet-stream') {
+        readStream.destroy() // Wrong file format, close the readStream and clean up.
+        dialog.showMessageBox({
+          title: 'Could not download model',
+          message: `Could not download model: Unexpected content type: "${contentType}" (expected: "binary/octet-stream")`
+        }).catch(err => console.error(err))
+      }
+    })
 
     // Preset the appropriate values on the internal state
     this.downloadStatus.isDownloading = true
