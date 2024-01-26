@@ -33,7 +33,7 @@
       <LCButton
         v-if="!isGenerating && !isLoading"
         v-on:click.prevent="forceReloadModel"
-        icon="repeat"
+        icon="refresh-cw"
         square="true"
         title="Force reload model"
       >
