@@ -6,7 +6,14 @@
     {% if forloop.last %}
       / {{ page.title }}
     {% else %}
-      / <a href="{% assign crumb_limit = forloop.index | plus: 1 %}{% for crumb in crumbs limit: crumb_limit %}{{ crumb | append: '/' | replace:'without-plugin/','without-plugins/' }}{% endfor %}">{{ crumb | replace:'-',' ' | remove:'.html' | capitalize }}</a>
+      {% assign crumb_limit = forloop.index | plus: 1 %}
+      {% assign this_crumb_link = "" %}
+      {% for c in crumbs limit: crumb_limit %}
+        {% assign this_crumb_link = this_crumb_link | append: c | append: '/' %}
+      {% endfor %}
+      / <a href="{{ this_crumb_link | absolute_url }}">
+        {{ crumb | replace:'-',' ' | remove:'.html' | capitalize }}
+      </a>
     {% endif %}
   {% endfor %}
 </div>
