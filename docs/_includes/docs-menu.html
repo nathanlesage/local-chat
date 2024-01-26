@@ -9,7 +9,7 @@
     {% if page.url contains item.url %}
     <li><span>{{ item.title }}</span></li>
     {% else %}
-    <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+    <li><a href="{{ item.url | relative_url }}">{{ item.title }}</a></li>
     {% endif %}
     {% endfor %}
   </ul>
