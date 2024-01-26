@@ -1,8 +1,13 @@
 <template>
   <div id="chat">
-    <p v-if="currentConversation !== undefined" style="display: flex; align-items: center;">
-      You are conversing with&nbsp;<ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
-    </p>
+    <div v-if="currentConversation !== undefined">
+      <p>
+        You started this conversation
+        <strong>{{ formatDate(currentConversation.startedAt, 'datetime', true) }}</strong>
+        with:
+      </p>
+      <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
+    </div>
     <p v-if="currentConversation !== undefined && currentConversation.messages.length === 0">
       This is the start of your conversation. Send a message to start chatting.
       <!-- TODO: Maybe add some example prompts here? -->
