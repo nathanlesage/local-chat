@@ -188,7 +188,11 @@ div#conversations .conversation .timestamp {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  opacity: 0.7;
+}
+
+div#conversations .conversation .timestamp,
+div#conversations .conversation .message-count {
+  color: rgb(150, 150, 150);
 }
 
 div#conversations .conversation:hover, div#conversations .conversation.active {
@@ -204,12 +208,10 @@ div#conversations .conversation .description {
 
 div#conversations .conversation .message-count {
   display: block;
-  opacity: 0.7;
   margin: 8px 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   grid-area: count
 }
-
 </style>

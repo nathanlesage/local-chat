@@ -8,13 +8,13 @@
     <div
       id="toggle-sidebar"
       title="Toggle sidebar"
-      v-on:click="toggleSidebar"
+      v-bind:class="{ 'sidebar-open': appState.showSidebar }"
     >
-      <vue-feather type="menu"></vue-feather>
+      <vue-feather v-on:click="toggleSidebar" type="menu"></vue-feather>
     </div>
 
     <aside v-show="appState.showSidebar" id="sidebar">
-      <Sidebar></Sidebar>
+      <ConversationManager></ConversationManager>
     </aside>
     <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
 
@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
-import Sidebar from './Sidebar.vue'
+import ConversationManager from './ConversationManager.vue'
 import { ref } from 'vue'
 import { useModelStore } from './pinia/models'
 import ModelManager from './ModelManager.vue'
@@ -135,14 +135,19 @@ aside#sidebar {
 
 div#toggle-sidebar {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  padding-left: 10px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+}
+
+div#toggle-sidebar.sidebar-open {
+  background: linear-gradient(to bottom, rgba(55, 55, 55, 1) 25%, rgba(55, 55, 55, .7) 75%, transparent 100%);
+  width: v-bind(sidebarWidth);
 }
 
 div#toggle-sidebar svg {
