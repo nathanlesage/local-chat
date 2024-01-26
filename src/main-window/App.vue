@@ -3,7 +3,7 @@
     id="window-content"
     v-on:mouseup="endResizing"
     v-on:mousemove="onResizing"
-    v-bind:class="{ 'sidebar-hidden': !showSidebar }"
+    v-bind:class="{ 'sidebar-hidden': !appState.showSidebar }"
   >
     <div
       id="toggle-sidebar"
@@ -13,13 +13,16 @@
       <vue-feather type="menu"></vue-feather>
     </div>
 
-    <Sidebar v-show="showSidebar"></Sidebar>
+    <aside v-show="appState.showSidebar" id="sidebar">
+      <Sidebar></Sidebar>
+    </aside>
+
     <div id="chat-wrapper">
       <Chat v-if="modelStore.models.length > 0"></Chat>
       <WelcomeMessage v-else></WelcomeMessage>
     </div>
     <Statusbar></Statusbar>
-    <div v-if="showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
+    <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
   </div>
 </template>
 
@@ -30,17 +33,18 @@ import Sidebar from './Sidebar.vue'
 import { ref } from 'vue'
 import { useModelStore } from './pinia/models'
 import WelcomeMessage from './WelcomeMessage.vue'
+import { useAppStateStore } from './pinia/app-state'
 
 const modelStore = useModelStore()
+const appState = useAppStateStore()
 
 const sidebarWidth = ref<string>('200px')
-const showSidebar = ref<boolean>(true)
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
 
 function beginResizing (event: MouseEvent) {
-  if (!showSidebar.value) {
+  if (!appState.showSidebar) {
     return
   }
   isResizing.value = true
@@ -48,7 +52,7 @@ function beginResizing (event: MouseEvent) {
 }
 
 function onResizing (event: MouseEvent) {
-  if (!isResizing.value || !showSidebar.value) {
+  if (!isResizing.value || !appState.showSidebar) {
     return
   }
 
@@ -64,7 +68,7 @@ function endResizing (event: MouseEvent) {
 }
 
 function toggleSidebar () {
-  showSidebar.value = !showSidebar.value
+  appState.showSidebar = !appState.showSidebar
 }
 
 </script>
@@ -116,6 +120,15 @@ div#chat-wrapper {
   grid-area: chat;
   overflow-y: auto;
   padding: 40px;
+}
+
+aside#sidebar {
+  grid-area: sidebar;
+  background-color: rgb(55, 55, 55);
+  padding: 10px;
+  padding-top: 30px; /* NOTE: Accommodate for sidebar toggle */
+  color: white;
+  overflow-y: auto;
 }
 
 div#toggle-sidebar {
@@ -214,6 +227,10 @@ li {
 
   a {
     color: rgb(138, 130, 255);
+  }
+
+  aside#sidebar {
+    background-color: #333;
   }
 }
 </style>

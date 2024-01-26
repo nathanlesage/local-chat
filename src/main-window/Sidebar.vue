@@ -1,5 +1,5 @@
 <template>
-  <aside id="conversations">
+  <div id="conversations">
     <h2 style="font-size: 100%;">Your Conversations</h2>
     <div v-if="conversationStore.conversations.length === 0">
       No conversations.
@@ -50,7 +50,7 @@
     <div>
       <LCButton v-on:click="newConversation">New conversation</LCButton>
     </div>
-  </aside>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -143,16 +143,7 @@ function abortChangeDescription () {
 </script>
 
 <style>
-aside#conversations {
-  grid-area: sidebar;
-  background-color: rgb(55, 55, 55);
-  padding: 10px;
-  padding-top: 30px; /* NOTE: Accommodate for sidebar toggle */
-  color: white;
-  overflow-y: auto;
-}
-
-aside#conversations .conversation {
+div#conversations .conversation {
   padding: 5px;
   border-radius: 8px;
   font-size: 80%;
@@ -164,25 +155,25 @@ aside#conversations .conversation {
   grid-template-areas: "title time" "description description" "count actions";
   align-items: center;
 }
-/** TODO SQUARE */
-aside#conversations .conversation button {
+
+div#conversations .conversation button {
   display: none;
 }
 
-aside#conversations .conversation:hover button {
+div#conversations .conversation:hover button {
   display: initial;
 }
 
-aside#conversations .conversation .action-button-wrapper {
+div#conversations .conversation .action-button-wrapper {
   grid-area: actions;
   text-align: right;
 }
 
-aside#conversations .conversation input[type=text] {
+div#conversations .conversation input[type=text] {
   grid-area: description;
 }
 
-aside#conversations .conversation h3 {
+div#conversations .conversation h3 {
   margin: 0;
   font-size: 100%;
   white-space: nowrap;
@@ -191,7 +182,7 @@ aside#conversations .conversation h3 {
   grid-area: title;
 }
 
-aside#conversations .conversation .timestamp {
+div#conversations .conversation .timestamp {
   grid-area: time;
   text-align: right;
   white-space: nowrap;
@@ -200,18 +191,18 @@ aside#conversations .conversation .timestamp {
   opacity: 0.7;
 }
 
-aside#conversations .conversation:hover, aside#conversations .conversation.active {
+div#conversations .conversation:hover, div#conversations .conversation.active {
   background-color :rgb(110, 110, 110);
 }
 
-aside#conversations .conversation .description {
+div#conversations .conversation .description {
   display: block;
   margin: 5px 0;
   line-height: 120%;
   grid-area: description;
 }
 
-aside#conversations .conversation .message-count {
+div#conversations .conversation .message-count {
   display: block;
   opacity: 0.7;
   margin: 8px 0;
@@ -221,9 +212,4 @@ aside#conversations .conversation .message-count {
   grid-area: count
 }
 
-@media (prefers-color-scheme: dark) {
-  div#sidebar {
-    background-color: #333;
-  }
-}
 </style>
