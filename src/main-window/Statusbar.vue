@@ -49,15 +49,10 @@
     </LCButton>
     </div>
     <div>
-      <LCButton v-on:click="showModelManager = !showModelManager">
+      <LCButton v-on:click="appState.showModelManager = !appState.showModelManager">
         Manage Models
       </LCButton>
     </div>
-
-    <ModelManager
-      v-if="showModelManager"
-      v-on:close-modal="showModelManager = !showModelManager"
-    ></ModelManager>
   </div>
 </template>
 
@@ -65,23 +60,19 @@
 import { ref, computed } from 'vue'
 import type { LlamaStatus } from 'src/main/LlamaProvider'
 import { alertError } from './util/prompts'
-import ModelManager from './ModelManager.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { formatSeconds } from './util/dates'
 import { formatSize } from './util/sizes'
 import { useModelStore } from './pinia/models'
+import { useAppStateStore } from './pinia/app-state'
 
 const ipcRenderer = window.ipc
 
-// Icon size for the entire statusbar
-const ICON_SIZE = 12
-
 const modelStore = useModelStore()
+const appState = useAppStateStore()
 
 // Copied from LlamaStatus since we cannot refer to things from the main process except for with Types
 const llamaStatus = ref<LlamaStatus>({ status: 'uninitialized', message: 'Provider not initialized' })
-
-const showModelManager = ref<boolean>(false)
 
 ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
   llamaStatus.value = newStatus

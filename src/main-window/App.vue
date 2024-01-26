@@ -16,13 +16,14 @@
     <aside v-show="appState.showSidebar" id="sidebar">
       <Sidebar></Sidebar>
     </aside>
+    <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
 
     <div id="chat-wrapper">
-      <Chat v-if="modelStore.models.length > 0"></Chat>
+      <ModelManager v-if="appState.showModelManager"></ModelManager>
+      <Chat v-else-if="modelStore.models.length > 0"></Chat>
       <WelcomeMessage v-else></WelcomeMessage>
     </div>
     <Statusbar></Statusbar>
-    <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
   </div>
 </template>
 
@@ -32,6 +33,7 @@ import Statusbar from './Statusbar.vue'
 import Sidebar from './Sidebar.vue'
 import { ref } from 'vue'
 import { useModelStore } from './pinia/models'
+import ModelManager from './ModelManager.vue'
 import WelcomeMessage from './WelcomeMessage.vue'
 import { useAppStateStore } from './pinia/app-state'
 
@@ -203,6 +205,10 @@ select {
 
 details summary {
   cursor: pointer;
+}
+
+abbr {
+  cursor: help;
 }
 
 li {
