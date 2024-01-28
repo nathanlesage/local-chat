@@ -1,5 +1,7 @@
 import { BrowserWindow, Rectangle, screen } from 'electron'
 
+// TODO: React to screen events!
+
 export interface WindowConfiguration {
   /**
    * The window's ID
@@ -41,6 +43,9 @@ export type DefaultBounds = Rectangle & { maximized: boolean }
  * To register a window, simply pass it to `registerWindow` immediately after
  * instantiation (but before showing it), and remember to save down the window
  * positions before the application exits.
+ *
+ * NOTE: It is only safe to access this provider **after** the app's ready event
+ * has been fired!
  */
 export class WindowPositionProvider {
   private static instance: WindowPositionProvider
@@ -50,6 +55,17 @@ export class WindowPositionProvider {
   private constructor () {
     this.configuration = []
     this.windowReferences = new Map()
+
+    // Hook into the screen module events.
+    screen.addListener('display-added', () => {
+      this.onScreenConfigChange()
+    })
+    screen.addListener('display-metrics-changed', () => {
+      this.onScreenConfigChange()
+    })
+    screen.addListener('display-removed', () => {
+      this.onScreenConfigChange()
+    })
   }
 
   /**
@@ -198,7 +214,7 @@ export class WindowPositionProvider {
     // Set the new bounds as per the existing configuration, if possible.
     const existingConf = this.windowPositions.find(c => c.windowId === windowId && c.displayConfiguration === this.currentDisplayConfigurationID)
     // Animate in case the user registered the window too late
-    win.setBounds(existingConf ?? defaultBounds, true)
+    win.setBounds(this.normalizeBounds(existingConf ?? defaultBounds), true)
 
     // Hook into the various events.
     const callback = (): void => {
@@ -246,6 +262,25 @@ export class WindowPositionProvider {
     // If it's a new config, splice it in
     if (this.windowPositions.indexOf(configToUse) < 0) {
       this.windowPositions.push(configToUse)
+    }
+  }
+
+  /**
+   * Private method to be called whenever the display configuration has changed
+   * (e.g., if a new display has been added or an existing display removed). For
+   * every currently opened window, this will ensure that the windows are
+   * repositioned according to the last remembered display position, if there is
+   * one.
+   */
+  private onScreenConfigChange () {
+    // Basically for every registered window, look if there is a configuration
+    // that we can restore.
+    const currentDisplayConfig = this.currentDisplayConfigurationID
+    for (const [ windowId, window ] of this.windowReferences) {
+      const config = this.windowPositions.find(c => c.windowId === windowId && c.displayConfiguration === currentDisplayConfig)
+      if (config !== undefined) {
+        window.setBounds(this.normalizeBounds(config))
+      } // else: Novel display config or window
     }
   }
 }
