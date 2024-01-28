@@ -5,12 +5,16 @@ import {
   ipcMain,
   dialog,
   shell,
+  screen,
   type MessageBoxOptions
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
 import path from 'path'
+import { promises as fs } from 'fs'
 import { setApplicationMenu } from './util/set-application-menu'
 import { showContextMenu } from './util/show-context-menu'
+import { WindowPositionProvider } from './WindowPositionProvider'
+import { registerShutdownTask } from './util/lifecycle'
 
 export interface AppNotification {
   title: string
@@ -43,6 +47,24 @@ export class AppProvider {
   }
 
   async boot () {
+    // WINDOW POSITION PROVIDER STUFF
+    const windowPositionConfig = path.join(app.getPath('userData'), 'window-positions.json')
+    const prov = WindowPositionProvider.getWindowPositionProvider()
+    try {
+      await fs.access(windowPositionConfig)
+      const data = await fs.readFile(windowPositionConfig, 'utf-8')
+      prov.windowPositions = JSON.parse(data)
+    } catch (err) {
+      // Ignore
+    }
+
+    registerShutdownTask(async () => {
+      const data = JSON.stringify(prov.windowPositions, undefined, '  ')
+      await fs.writeFile(windowPositionConfig, data, 'utf-8')
+    })
+
+    // END WINDOW POSITION PROVIDER STUFF
+
     setApplicationMenu()
     await this.showMainWindow()
   }
@@ -73,6 +95,17 @@ export class AppProvider {
     }
 
     this.mainWindow = new BrowserWindow(windowConfig)
+
+    // Immediately register the main Window positioning
+    const prov = WindowPositionProvider.getWindowPositionProvider()
+    const workArea = screen.getPrimaryDisplay().workArea
+    prov.registerWindow(this.mainWindow, 'main-window', {
+      x: Math.round(workArea.width / 2 - 400),
+      y: Math.round(workArea.height / 2 - 320),
+      width: 800,
+      height: 640,
+      maximized: false
+    })
 
     const effectiveUrl = new URL(MAIN_WINDOW_WEBPACK_ENTRY)
     this.mainWindow.loadURL(effectiveUrl.toString())
