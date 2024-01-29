@@ -12,6 +12,18 @@
       This is the start of your conversation. Send a message to start chatting.
       <!-- TODO: Maybe add some example prompts here? -->
     </p>
+
+    <!-- System prompt -->
+    <details v-if="currentConversation !== undefined">
+      <summary>System prompt</summary>
+      <textarea
+        id="system-prompt"
+        v-model="systemPrompt"
+        placeholder="Write an optional system prompt here. Leave empty to use the default prompt."
+      ></textarea>
+      <LCButton v-on:click="updateSystemPrompt()" v-bind:disabled="systemPrompt === (currentConversation.systemPrompt ?? '')">Save system prompt</LCButton>
+    </details>
+
     <div
       v-if="currentConversation !== undefined"
       v-for="(message, idx) in currentConversation.messages"
@@ -88,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUpdated, computed } from 'vue'
+import { ref, onUpdated, computed, watch } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
@@ -104,6 +116,7 @@ import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
+import { transpileModule } from 'typescript'
 
 const ipcRenderer = window.ipc
 
@@ -122,13 +135,19 @@ const modelStore = useModelStore()
 
 // Refs and computed values
 const currentConversation = computed<Conversation|undefined>(() => {
-  return conversationStore.getCurrentConversation()
+  return conversationStore.currentConversation
 })
 
+const systemPrompt = ref<string>('')
 const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
 const message = ref<string>('')
 const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
+
+// Update the system prompt if applicable
+watch(currentConversation, (newValue) => {
+  systemPrompt.value = newValue?.systemPrompt ?? ''
+})
 
 /**
  * Scrolls the chat wrapper down. This happens automatically, for example,
@@ -225,6 +244,18 @@ function selectModel (modelPath: string) {
 }
 
 /**
+ * Updates the current conversation's system prompt
+ */
+function updateSystemPrompt () {
+  const newPrompt = systemPrompt.value.trim()
+  if (newPrompt === (currentConversation.value?.systemPrompt ?? '')) {
+    return
+  }
+  ipcRenderer.invoke('update-system-prompt', newPrompt)
+    .catch(err => alertError(err))
+}
+
+/**
  * Initiates a conversation export
  */
 function exportConversation () {
@@ -311,7 +342,7 @@ div#regenerate-button-wrapper {
   padding: 5px 0;
 }
 
-textarea#prompt {
+textarea#prompt, textarea#system-prompt {
   background-color: #f7f7f7;
   color: inherit;
   width: 100%;
@@ -430,7 +461,7 @@ textarea#prompt {
 }
 
 @media (prefers-color-scheme: dark) {
-  textarea#prompt {
+  textarea#prompt, textarea#system-prompt {
     background-color: rgb(33, 33, 33);
   }
 

@@ -8,7 +8,7 @@ import { promises as fs } from 'fs'
 import { registerShutdownTask, registerStartupTask } from "./util/lifecycle"
 
 export interface ChatMessage {
-  role: 'user'|'assistant'
+  role: 'user'|'assistant'|'system'
   content: string
   timestamp: number
   generationTime: number
@@ -17,6 +17,7 @@ export interface ChatMessage {
 export interface Conversation {
   id: string
   description: string
+  systemPrompt?: string
   startedAt: number
   modelPath: string
   messages: ChatMessage[]
@@ -114,6 +115,16 @@ export class ConversationManager {
       this.updateConversation(conv)
     })
 
+    ipcMain.handle('update-system-prompt', async (event, args) => {
+      const conv = this.getConversation(this.activeConversation)
+      if (conv === undefined) {
+        return
+      }
+
+      conv.systemPrompt = String(args).trim() !== '' ? String(args).trim() : undefined
+      this.updateConversation(conv)
+    })
+
     ipcMain.handle('prompt', async (event, args) => {
       const conversation = this.getConversation(this.activeConversation)
 
@@ -186,6 +197,7 @@ export class ConversationManager {
     const newConversation = {
       id: uuid(),
       description: '',
+      systemPrompt: undefined,
       startedAt: Date.now(),
       modelPath: model.path,
       messages: []
@@ -218,7 +230,7 @@ export class ConversationManager {
     broadcastIPCMessage('active-conversation-changed', conv.id)
     // Also load the appropriate model
     this.modelManager.getModel(conv.modelPath, true)
-      .then(model => this.llamaProvider.loadModel(model, conv.messages))
+      .then(model => this.llamaProvider.loadModel(model, conv))
   }
 
   public getConversation (conversationId?: string): Conversation|undefined {
@@ -234,7 +246,7 @@ export class ConversationManager {
       // Also load the appropriate model
       if (reloadModel) {
         this.modelManager.getModel(update.modelPath, true)
-          .then(model => this.llamaProvider.loadModel(model, update.messages))
+          .then(model => this.llamaProvider.loadModel(model, update))
       }
     }
   }

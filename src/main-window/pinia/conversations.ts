@@ -1,7 +1,7 @@
 // Conversation store
 import { defineStore } from 'pinia'
 import type { Conversation } from 'src/main/ConversationManager'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const ipcRenderer = window.ipc
 
@@ -11,6 +11,9 @@ const ipcRenderer = window.ipc
 export const useConversationStore = defineStore('conversation-store', () => {
   const conversations = ref<Conversation[]>([])
   const activeConversation = ref<string|undefined>(undefined)
+  const currentConversation = computed<Conversation|undefined>(() => {
+    return conversations.value.find(c => c.id === activeConversation.value)
+  })
 
   ipcRenderer.invoke('get-conversations').then((payload: Conversation[]) => {
     conversations.value = payload
@@ -38,14 +41,5 @@ export const useConversationStore = defineStore('conversation-store', () => {
     activeConversation.value = payload
   })
 
-  /**
-   * Returns the currently selected conversation.
-   *
-   * @return  {Conversation|undefined}  The active conversation or undefined.
-   */
-  function getCurrentConversation (): Conversation|undefined {
-    return conversations.value.find(c => c.id === activeConversation.value)
-  }
-
-  return { conversations, activeConversation, getCurrentConversation }
+  return { conversations, activeConversation, currentConversation }
 })

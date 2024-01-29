@@ -8,6 +8,7 @@
       danger: type === 'danger',
       square: square !== undefined
     }"
+    v-bind:disabled="disabled"
   >
     <vue-feather
       v-if="icon !== undefined"
@@ -22,6 +23,7 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
+  disabled?: boolean
   type?: 'primary'|'danger'|'default' // Default: default
   icon?: string
   square?: any // If not undefined, will render square
@@ -42,6 +44,7 @@ const iconSize = computed<number>(() => {
 
 <style>
 button {
+  color: #333;
   background-color: rgb(210, 210, 210);
   height: 23px;
   border: none;
@@ -52,7 +55,12 @@ button {
   justify-content: center;
   align-items: center;
   gap: 5px;
-  color: #333;
+}
+
+button[disabled] {
+  color: #666;
+  background-color: rgb(180, 180, 180);
+  cursor: not-allowed;
 }
 
 button svg {

@@ -12,7 +12,8 @@ import type {
 import mod from 'node-llama-cpp'
 import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
-import { ChatMessage } from './ConversationManager'
+import { ChatMessage, Conversation } from './ConversationManager'
+import _ from 'lodash'
 
 /**
  * Small utility function that determines how many GPU layers the model may use.
@@ -69,14 +70,14 @@ export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
 
 export class LlamaProvider {
   private loadedModel: ModelDescriptor|undefined
-  private lastLoadedConversationHistory: ChatMessage[]
+  private lastLoadedConversation: Conversation|undefined
   private session: LlamaChatSession|undefined
   private status: LlamaStatus
 
   constructor () {
     console.log('Instantiating LlamaProvider')
     this.setStatus('uninitialized', 'Provider not initialized')
-    this.lastLoadedConversationHistory = []
+    this.lastLoadedConversation = undefined
 
     // Hook up event listeners
 
@@ -96,7 +97,7 @@ export class LlamaProvider {
       if (this.loadedModel === undefined) {
         throw new Error('Could not reload model: None loaded.')
       }
-      return this.loadModel(this.loadedModel, this.lastLoadedConversationHistory, true)
+      return this.loadModel(this.loadedModel, this.lastLoadedConversation, true)
     })
   }
 
@@ -156,6 +157,8 @@ export class LlamaProvider {
         conv.push({ type: 'user', text: message.content })
       } else if (message.role === 'assistant') {
         conv.push({ type: 'model', response: [message.content] })
+      } else if (message.role === 'system') {
+        conv.push({ type: 'system', text: message.content })
       }
     }
 
@@ -180,10 +183,10 @@ export class LlamaProvider {
     }
   }
 
-  async loadModel (modelDescriptor: ModelDescriptor, previousConversation: ChatMessage[] = [], force: boolean = false) {
+  async loadModel (modelDescriptor: ModelDescriptor, conversation?: Conversation, force: boolean = false) {
     if (
-      modelDescriptor.path === this.loadedModel?.path &&
-      JSON.stringify(this.lastLoadedConversationHistory) === JSON.stringify(previousConversation) &&
+      _.isEqual(modelDescriptor, this.loadedModel) &&
+      _.isEqual(conversation, this.lastLoadedConversation) &&
       !force // Allow forcefully reloading model, even if nothing else has changed (useful especially for config changes.)
     ) {
       console.warn(`Ignoring attempt to reload model, since nothing has changed and the force-flag was not present.`)
@@ -191,7 +194,7 @@ export class LlamaProvider {
     }
 
     const resolved = await llamaModule()
-    this.lastLoadedConversationHistory = structuredClone(previousConversation)    
+    this.lastLoadedConversation = structuredClone(conversation)
     this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
     
     console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
@@ -208,14 +211,23 @@ export class LlamaProvider {
 
     this.session = new resolved.LlamaChatSession({
         contextSequence: context.getSequence(),
+        systemPrompt: conversation?.systemPrompt,
         chatWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
     } as LlamaChatSessionOptions)
 
-    this.session.setChatHistory(this.convertConversationMessages(previousConversation))
+    if (conversation !== undefined) {
+      const history = this.convertConversationMessages(conversation.messages)
+      if (conversation.systemPrompt !== undefined) {
+        history.unshift({ type: 'system', text: conversation.systemPrompt })
+      }
+      this.session.setChatHistory(history)
+      console.log(`\x1b[1;31mSession initialized with ${history.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+    } else {
+      console.log(`\x1b[1;31mSession initialized with no messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+    }
 
-    console.log(`\x1b[1;31mSession initialized with ${previousConversation.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
 
-    this.loadedModel = modelDescriptor
+    this.loadedModel = structuredClone(modelDescriptor)
 
     this.setStatus('ready')
 
