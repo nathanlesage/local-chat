@@ -3,7 +3,7 @@
     <div v-if="currentConversation !== undefined">
       <p>
         You started this conversation
-        <strong>{{ formatDate(currentConversation.startedAt, 'datetime', true) }}</strong>
+        <strong>{{ formatDate(currentConversation.startedAt, 'datetime') }}</strong>
         with:
       </p>
       <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
@@ -15,7 +15,11 @@
     <div
       v-if="currentConversation !== undefined"
       v-for="(message, idx) in currentConversation.messages"
-      v-bind:class="messageClass(message)"
+      v-bind:class="{
+        message: true,
+        user: message.role === 'user',
+        assistant: message.role === 'assistant'
+      }"
     >
       <div class="message-header">
         <h4>{{ messageUser(message.role) }}:</h4>
@@ -135,18 +139,6 @@ function scrollChatDown () {
   if (elem !== null) {
     elem.scrollTop = elem.scrollHeight
   }
-}
-
-/**
- * Returns a class list string for the message, consisting of the message
- * classes and dynamic ones depending on the message roles.
- *
- * @param   {ChatMessage}  message  The message to generate the classList for
- *
- * @return  {string}                The classList
- */
-function messageClass (message: ChatMessage): string {
-  return [ 'message', message.role ].join(' ')
 }
 
 /**
