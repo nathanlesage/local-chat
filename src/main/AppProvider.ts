@@ -5,7 +5,6 @@ import {
   ipcMain,
   dialog,
   shell,
-  screen,
   type MessageBoxOptions
 } from 'electron'
 import { ConversationManager } from './ConversationManager'
@@ -98,14 +97,7 @@ export class AppProvider {
 
     // Immediately register the main Window positioning
     const prov = WindowPositionProvider.getWindowPositionProvider()
-    const workArea = screen.getPrimaryDisplay().workArea
-    prov.registerWindow(this.mainWindow, 'main-window', {
-      x: Math.round(workArea.width / 2 - 400),
-      y: Math.round(workArea.height / 2 - 320),
-      width: 800,
-      height: 640,
-      maximized: false
-    })
+    prov.registerWindow(this.mainWindow, 'main-window')
 
     const effectiveUrl = new URL(MAIN_WINDOW_WEBPACK_ENTRY)
     this.mainWindow.loadURL(effectiveUrl.toString())

@@ -34,11 +34,6 @@ export interface WindowConfiguration {
 }
 
 /**
- * DefaultBounds means a window's default x, y, w, h, and maximization status.
- */
-export type DefaultBounds = Rectangle & { maximized: boolean }
-
-/**
  * This provider manages the window positions of all windows registered with it.
  * To register a window, simply pass it to `registerWindow` immediately after
  * instantiation (but before showing it), and remember to save down the window
@@ -200,10 +195,8 @@ export class WindowPositionProvider {
    *
    * @param   {BrowserWindow}  win            The window to register.
    * @param   {string}         windowId       The window's unique ID.
-   * @param   {DefaulBounds}   defaultBounds  Default position for new
-   *                                          configurations.
    */
-  public registerWindow (win: BrowserWindow, windowId: string, defaultBounds: DefaultBounds) {
+  public registerWindow (win: BrowserWindow, windowId: string) {
     if (this.windowReferences.has(windowId)) {
       throw new Error(`Window with ID ${windowId} already registered.`)
     }
@@ -214,11 +207,11 @@ export class WindowPositionProvider {
     // Set the new bounds as per the existing configuration, if possible.
     const existingConf = this.windowPositions.find(c => c.windowId === windowId && c.displayConfiguration === this.currentDisplayConfigurationID)
     // Animate in case the user registered the window too late
-    win.setBounds(this.normalizeBounds(existingConf ?? defaultBounds), true)
+    win.setBounds(this.normalizeBounds(existingConf ?? win.getNormalBounds()), true)
 
     // Hook into the various events.
     const callback = (): void => {
-      this.updateWindowPosition(win, windowId, defaultBounds)
+      this.updateWindowPosition(win, windowId)
     }
 
     win.on('resize', callback)
@@ -236,15 +229,15 @@ export class WindowPositionProvider {
    *
    * @param   {BrowserWindow}  win            The window in queestion
    * @param   {string}         windowId       The associated window ID
-   * @param   {DefaultBounds}  defaultBounds  Default bounds
    */
-  private updateWindowPosition (win: BrowserWindow, windowId: string, defaultBounds: DefaultBounds) {
+  private updateWindowPosition (win: BrowserWindow, windowId: string) {
     // A default configuration to be applied when there is no existing config.
     const conf = this.currentDisplayConfigurationID
     const defaultConfig: WindowConfiguration = {
       windowId,
       displayConfiguration: conf,
-      ...defaultBounds
+      ...win.getNormalBounds(),
+      maximized: win.isMaximized()
     }
 
     // Then, get the existing configuration, if available
