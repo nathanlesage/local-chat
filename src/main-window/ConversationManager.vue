@@ -13,7 +13,7 @@
         active: conversationStore.activeConversation === conv.id }"
       v-on:click="selectConversation(conv.id)"
     >
-      <h3>{{ getModelName(conv) }}</h3>
+      <h3>{{ modelStore.getModelName(conv.modelPath) ?? 'Unknown model' }}</h3>
       <span class="timestamp" v-bind:title="`Conversation ${conv.id}`">
         {{ formatDate(conv.startedAt, 'date') }}
       </span>
@@ -59,7 +59,6 @@ import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
 import { formatDate } from './util/dates'
 import { ref } from 'vue'
-import { Conversation } from 'src/main/ConversationManager'
 import LCButton from './reusable-components/LCButton.vue'
 
 const conversationStore = useConversationStore()
@@ -68,19 +67,6 @@ const ipcRenderer = window.ipc
 
 const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
-
-function getModelName (conversation: Conversation): string {
-  const model = modelStore.getModelDescriptor(conversation.modelPath)
-  if (model === undefined) {
-    return 'Unknown model'
-  }
-
-  if (model.metadata?.general.name !== undefined) {
-    return model.metadata.general.name
-  } else {
-    return model.name
-  }
-}
 
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)

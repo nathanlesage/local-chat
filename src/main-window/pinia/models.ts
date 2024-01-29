@@ -24,6 +24,7 @@ export const useModelStore = defineStore('model-store', () => {
   const modelDownloadStatus = ref<ModelDownloadStatus>({ isDownloading: false, name: '', size_total: 0, size_downloaded: 0, start_time: 0, eta_seconds: 0, bytes_per_second: 0 })
   const llamaInfo = ref<LlamaCppInfo|undefined>(undefined)
 
+  // Initial retrieval
   ipcRenderer.invoke('get-available-models').then((payload: ModelDescriptor[]) => {
     models.value = payload
   })
@@ -55,9 +56,24 @@ export const useModelStore = defineStore('model-store', () => {
     modelDownloadStatus.value = newStatus
   })
 
+  // Helper functions
   function getModelDescriptor (modelId: string): ModelDescriptor|undefined {
     return models.value.find(model => model.path === modelId)
   }
 
-  return { models, currentModel, modelDownloadStatus, llamaInfo, getModelDescriptor }
+  function getModelName (modelId: string): string|undefined {
+    const descriptor = models.value.find(model => model.path === modelId)
+    if (descriptor === undefined) {
+      return undefined
+    } else if (descriptor.metadata?.general.name !== undefined) {
+      return descriptor.metadata.general.name
+    } else {
+      return descriptor.name
+    }
+  }
+
+  return {
+    models, currentModel, modelDownloadStatus, llamaInfo,
+    getModelDescriptor, getModelName
+  }
 })

@@ -54,7 +54,7 @@
   <LCButton v-on:click="forceReloadModels(true)">Clear config</LCButton>
   <div v-if="store.models.length > 0" class="model-card" v-for="model in store.models" v-key="model.path">
     <h4>
-      {{ getModelName(model) }}
+      {{ store.getModelName(model.path) }}
     </h4>
     <span class="size">
       {{ formatSize(model.bytes) }}
@@ -135,14 +135,6 @@ function downloadModel () {
 }
 
 // UTIL
-function getModelName (model: ModelDescriptor) {
-  if (model.metadata?.general.name === undefined) {
-    return model.name
-  } else {
-    return model.metadata.general.name
-  }
-}
-
 function isQuantized (model: ModelDescriptor) {
   return model.metadata?.general.quantization_version !== undefined
 }

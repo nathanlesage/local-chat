@@ -22,7 +22,7 @@
       }"
     >
       <div class="message-header">
-        <h4>{{ messageUser(message.role) }}:</h4>
+        <h4>{{ message.role === 'user' ? 'You' : (modelStore.getModelName(currentConversation.modelPath) ?? 'Assistant') }}:</h4>
         <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
         <div class="message-generation-time" v-if="message.generationTime > 0">
           Generated in {{  formatGenerationTime(message.generationTime) }}s
@@ -41,7 +41,7 @@
 
     <div id="generating-message" class="message assistant" v-if="isGenerating">
       <div class="message-header">
-        <h4>{{ messageUser('assistant') }}:</h4>
+        <h4>{{ currentConversation ? modelStore.getModelName(currentConversation.modelPath) ?? 'Assistant' : 'Assistant' }}:</h4>
         <!-- While generating we only show a loading spinner -->
         <div class="message-timestamp" v-html="LoadingSpinner"></div>
         <div class="message-generation-time">
@@ -138,21 +138,6 @@ function scrollChatDown () {
   const elem = document.getElementById('chat-wrapper')
   if (elem !== null) {
     elem.scrollTop = elem.scrollHeight
-  }
-}
-
-/**
- * Determins the human-readable user string for the message.
- *
- * @param   {string}  role       The role to be transformed
- *
- * @return  {string}             The human readabale user string
- */
-function messageUser (role: 'user'|'assistant'): string {
-  if (role === 'user') {
-    return 'You'
-  } else {
-    return modelStore.currentModel?.name ?? 'Assistant'
   }
 }
 
