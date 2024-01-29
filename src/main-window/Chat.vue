@@ -91,13 +91,13 @@ import { ref, onUpdated, computed } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
-import { formatDate } from './util/dates'
+import { formatDate, formatGenerationTime } from './util/dates'
 import showdown from 'showdown'
 import hljs from 'highlight.js'
 
 import 'highlight.js/styles/atom-one-dark.min.css'
 import 'highlightjs-copy/dist/highlightjs-copy.min.css'
-import type { ChatMessage, Conversation } from 'src/main/ConversationManager'
+import type { Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
@@ -165,19 +165,6 @@ function messageUser (role: 'user'|'assistant'): string {
  */
 function md2html (content: string): string {
   return converter.makeHtml(content)
-}
-
-/**
- * Formats the generation time during response generation, rounded to one
- * decimal
- *
- * @param   {number}  time  The time in milliseconds
- *
- * @return  {string}        The formatted time in the format `1.2`
- */
-function formatGenerationTime (time: number): string {
-  const t = String(Math.round(time / 100) / 10)
-  return (!t.includes('.')) ? `${t}.0` : t
 }
 
 /**

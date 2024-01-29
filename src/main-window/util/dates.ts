@@ -43,3 +43,16 @@ export function formatSeconds (sec: number): string {
   const duration = Duration.fromObject({ seconds: sec })
   return duration.toFormat('mm:ss')
 }
+
+/**
+ * Formats the generation time during response generation, rounded to one
+ * decimal
+ *
+ * @param   {number}  time  The time in milliseconds
+ *
+ * @return  {string}        The formatted time in the format `1.2`
+ */
+export function formatGenerationTime (time: number): string {
+  const t = String(Math.round(time / 100) / 10)
+  return (!t.includes('.')) ? `${t}.0` : t
+}
