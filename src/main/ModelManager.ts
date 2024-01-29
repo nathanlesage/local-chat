@@ -152,12 +152,8 @@ export class ModelManager {
       this.downloadCancelFlag = true
     })
 
-    ipcMain.handle('select-model-prompt-wrapper', async (event, { modelPath, value }) => {
-      return await this.selectModelPromptWrapper(modelPath, value)
-    })
-
-    ipcMain.handle('select-model-context-length', async (event, { modelPath, value }) => {
-      return await this.selectModelContextLength(modelPath, value)
+    ipcMain.handle('update-model-config', async (event, { modelPath, config }) => {
+      return await this.updateModelConfig(modelPath, config)
     })
     
     ipcMain.handle('force-reload-available-models', async (event, args) => {
@@ -420,28 +416,17 @@ export class ModelManager {
     }
   }
 
-  async selectModelPromptWrapper (modelPath: string, prompt: ChatPromptWrapper) {
+  async updateModelConfig (modelPath: string, options: Partial<ModelConfig>) {
     const availableModels = await this.getAvailableModels()
     const model = availableModels.find(model => model.path === modelPath)
-    if (model !== undefined) {
-      console.log(`Setting prompt template to ${prompt} for model ${model.name}`)
-      model.config.prompt = prompt
-      this.modelConfigCache.set(modelPath, model.config)
-      const models = await this.getAvailableModels()
-      broadcastIPCMessage('available-models-updated', models)
+    if (model === undefined) {
+      throw new Error(`Cannot update model config for ${modelPath}: Model not found.`)
     }
-  }
 
-  async selectModelContextLength (modelPath: string, contextLength: number) {
-    const availableModels = await this.getAvailableModels()
-    const model = availableModels.find(model => model.path === modelPath)
-    if (model !== undefined) {
-      console.log(`Setting context length to ${contextLength} for model ${model.name}`)
-      model.config.contextLengthOverride = contextLength
-      this.modelConfigCache.set(modelPath, model.config)
-      const models = await this.getAvailableModels()
-      broadcastIPCMessage('available-models-updated', models)
-    }
+    model.config = { ...model.config, ...options }
+    this.modelConfigCache.set(modelPath, model.config)
+    const models = await this.getAvailableModels()
+    broadcastIPCMessage('available-models-updated', models)
   }
 
 

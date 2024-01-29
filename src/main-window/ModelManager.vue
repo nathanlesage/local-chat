@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ModelDescriptor } from 'src/main/ModelManager'
+import type { ModelConfig, ModelDescriptor } from 'src/main/ModelManager'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
 import { formatSize } from './util/sizes'
@@ -115,6 +115,7 @@ import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 import { formatNumber } from './util/numbers'
 import LCButton from './reusable-components/LCButton.vue'
+import type { ChatPromptWrapper } from 'src/main/LlamaProvider'
 
 const store = useModelStore()
 
@@ -167,7 +168,12 @@ function selectModelPromptWrapper (event: Event, modelPath: string) {
     return
   }
 
-  ipcRenderer.invoke('select-model-prompt-wrapper', { modelPath, value: select.value })
+  updateModelConfig(modelPath, { prompt: select.value as ChatPromptWrapper })
+}
+
+function updateModelConfig (modelPath: string, config: Partial<ModelConfig>) {
+  ipcRenderer.invoke('update-model-config', { modelPath, config })
+    .catch(err => alertError(err))
 }
 
 function selectModelContextLength (event: Event, modelPath: string) {
@@ -177,7 +183,7 @@ function selectModelContextLength (event: Event, modelPath: string) {
     return
   }
 
-  ipcRenderer.invoke('select-model-context-length', { modelPath, value: parseInt(select.value, 10) })
+  updateModelConfig(modelPath, { contextLengthOverride: parseInt(select.value, 10) })
 }
 
 function cancelDownload () {
