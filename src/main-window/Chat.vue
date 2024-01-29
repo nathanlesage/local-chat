@@ -1,32 +1,32 @@
 <template>
   <div id="chat">
-    <div v-if="currentConversation !== undefined">
+    <div>
       <p>
         You started this conversation
-        <strong>{{ formatDate(currentConversation.startedAt, 'datetime') }}</strong>
+        <strong>{{ formatDate(conversation.startedAt, 'datetime') }}</strong>
         with:
       </p>
       <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
     </div>
-    <p v-if="currentConversation !== undefined && currentConversation.messages.length === 0">
+
+    <p v-if="conversation.messages.length === 0">
       This is the start of your conversation. Send a message to start chatting.
       <!-- TODO: Maybe add some example prompts here? -->
     </p>
 
     <!-- System prompt -->
-    <details v-if="currentConversation !== undefined">
+    <details>
       <summary>System prompt</summary>
       <textarea
         id="system-prompt"
         v-model="systemPrompt"
         placeholder="Write an optional system prompt here. Leave empty to use the default prompt."
       ></textarea>
-      <LCButton v-on:click="updateSystemPrompt()" v-bind:disabled="systemPrompt === (currentConversation.systemPrompt ?? '')">Save system prompt</LCButton>
+      <LCButton v-on:click="updateSystemPrompt()" v-bind:disabled="systemPrompt === (conversation.systemPrompt ?? '')">Save system prompt</LCButton>
     </details>
 
     <div
-      v-if="currentConversation !== undefined"
-      v-for="(message, idx) in currentConversation.messages"
+      v-for="(message, idx) in conversation.messages"
       v-bind:class="{
         message: true,
         user: message.role === 'user',
@@ -34,7 +34,7 @@
       }"
     >
       <div class="message-header">
-        <h4>{{ message.role === 'user' ? 'You' : (modelStore.getModelName(currentConversation.modelPath) ?? 'Assistant') }}:</h4>
+        <h4>{{ message.role === 'user' ? 'You' : (modelStore.getModelName(conversation.modelPath) ?? 'Assistant') }}:</h4>
         <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
         <div class="message-generation-time" v-if="message.generationTime > 0">
           Generated in {{  formatGenerationTime(message.generationTime) }}s
@@ -54,7 +54,7 @@
 
     <div id="generating-message" class="message assistant" v-if="isGenerating">
       <div class="message-header">
-        <h4>{{ currentConversation ? modelStore.getModelName(currentConversation.modelPath) ?? 'Assistant' : 'Assistant' }}:</h4>
+        <h4>{{ conversation ? modelStore.getModelName(conversation.modelPath) ?? 'Assistant' : 'Assistant' }}:</h4>
         <!-- While generating we only show a loading spinner -->
         <div class="message-timestamp" v-html="LoadingSpinner"></div>
         <div class="message-generation-time">
@@ -73,34 +73,28 @@
     </div>
 
     <!-- Text area -->
-    <template v-if="currentConversation !== undefined">
-      <textarea
-        v-if="currentConversation !== undefined"
-        v-model="message"
-        id="prompt"
-        name="prompt"
-        placeholder="Type to chat (Shift+Enter to send)"
-        v-on:keydown.enter.shift.exact.prevent="prompt"
-        v-bind:disabled="isGenerating"
-        autofocus
-      ></textarea>
+    <textarea
+      v-if="conversation !== undefined"
+      v-model="message"
+      id="prompt"
+      name="prompt"
+      placeholder="Type to chat (Shift+Enter to send)"
+      v-on:keydown.enter.shift.exact.prevent="prompt"
+      v-bind:disabled="isGenerating"
+      autofocus
+    ></textarea>
 
-      <div id="chat-button-wrapper">
-        <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
-          Send
-        </LCButton>
-        <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
-      </div>
-
-    </template>
-    <p v-else>
-      Create a new conversation to get started.
-    </p>
+    <div id="chat-button-wrapper">
+      <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
+        Send
+      </LCButton>
+      <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onUpdated, computed, watch } from 'vue'
+import { ref, onUpdated, toRef, watch } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
@@ -116,9 +110,12 @@ import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
-import { transpileModule } from 'typescript'
 
 const ipcRenderer = window.ipc
+
+const props = defineProps<{
+  conversation: Conversation
+}>()
 
 // Additional setup
 // Add copy button plugin
@@ -134,9 +131,6 @@ const conversationStore = useConversationStore()
 const modelStore = useModelStore()
 
 // Refs and computed values
-const currentConversation = computed<Conversation|undefined>(() => {
-  return conversationStore.currentConversation
-})
 
 const systemPrompt = ref<string>('')
 const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
@@ -145,7 +139,7 @@ const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
 
 // Update the system prompt if applicable
-watch(currentConversation, (newValue) => {
+watch(toRef(props, 'conversation'), (newValue) => {
   systemPrompt.value = newValue?.systemPrompt ?? ''
 })
 
@@ -178,11 +172,11 @@ function md2html (content: string): string {
  * @param   {number}  idx  The message index
  */
 function copyMessageToClipboard(idx: number) {
-  if (currentConversation.value === undefined) {
+  if (props.conversation === undefined) {
     return
   }
 
-  const plain = currentConversation.value.messages[idx].content
+  const plain = props.conversation.messages[idx].content
   const html = md2html(plain)
   const data = new ClipboardItem({
     'text/plain': new Blob([plain], { type: 'text/plain' }),
@@ -248,7 +242,7 @@ function selectModel (modelPath: string) {
  */
 function updateSystemPrompt () {
   const newPrompt = systemPrompt.value.trim()
-  if (newPrompt === (currentConversation.value?.systemPrompt ?? '')) {
+  if (newPrompt === (props.conversation.systemPrompt ?? '')) {
     return
   }
   ipcRenderer.invoke('update-system-prompt', newPrompt)
@@ -259,11 +253,7 @@ function updateSystemPrompt () {
  * Initiates a conversation export
  */
 function exportConversation () {
-  if (currentConversation.value === undefined) {
-    return
-  }
-
-  ipcRenderer.invoke('export-conversation', currentConversation.value.id)
+  ipcRenderer.invoke('export-conversation', props.conversation.id)
     .catch(err => alertError(err))
 }
 
@@ -273,12 +263,8 @@ function exportConversation () {
  * @param   {number}  messageIdx      The message to delete
  */
 function deleteMessage (messageIdx: number) {
-  if (currentConversation.value === undefined) {
-    return alertError(new Error('Cannot delete message from conversation: None active'))
-  }
-
   ipcRenderer.invoke('delete-messages', {
-    conversationId: currentConversation.value.id,
+    conversationId: props.conversation.id,
     messageIdx: [messageIdx]
   })
     .catch(err => alertError(err))
@@ -290,13 +276,13 @@ function deleteMessage (messageIdx: number) {
  * @return  {boolean} False if it is not possible, otherwise true.
  */
 function canRegenerateLastResponse (): boolean {
-  if (currentConversation.value === undefined || currentConversation.value.messages.length < 2) {
+  if (props.conversation.messages.length < 2) {
     return false
   }
 
   // First, assert that the last message is by the model
-  const msgs = currentConversation.value.messages
-  const messageCount = currentConversation.value.messages.length
+  const msgs = props.conversation.messages
+  const messageCount = props.conversation.messages.length
   if (msgs[messageCount - 1].role !== 'assistant' || msgs[messageCount - 2].role !== 'user') {
     return false
   }
@@ -312,15 +298,15 @@ function canRegenerateLastResponse (): boolean {
 function regenerateLastResponse () {
   // Regenerating basically involves deleting the last two messages, and
   // then prompting with the second-to-last (user) message
-  if (!canRegenerateLastResponse() || currentConversation.value === undefined) {
+  if (!canRegenerateLastResponse()) {
     return
   }
 
-  const messageCount = currentConversation.value.messages.length
-  const oldPrompt = currentConversation.value.messages[messageCount - 2].content
+  const messageCount = props.conversation.messages.length
+  const oldPrompt = props.conversation.messages[messageCount - 2].content
 
   ipcRenderer.invoke('delete-messages', {
-    conversationId: currentConversation.value.id,
+    conversationId: props.conversation.id,
     messageIdx: [messageCount - 2, messageCount - 1]
   })
     .catch(err => alertError(err))
@@ -475,4 +461,3 @@ textarea#prompt, textarea#system-prompt {
 }
 }
 </style>
-src/main/ConversationManager

@@ -19,9 +19,16 @@
     <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
 
     <div id="chat-wrapper">
+      <!-- Show modals if applicable -->
       <ModelManager v-if="appState.showModelManager"></ModelManager>
-      <Chat v-else-if="modelStore.models.length > 0"></Chat>
-      <WelcomeMessage v-else></WelcomeMessage>
+      <!-- Otherwise, show the welcome message if there are no models. -->
+      <WelcomeMessage v-else-if="modelStore.models.length === 0"></WelcomeMessage>
+      <!-- Else, if we have a conversation, display that one ...-->
+      <Chat v-else-if="conversationStore.currentConversation !== undefined" v-bind:conversation="conversationStore.currentConversation"></Chat>
+      <!-- Or, finally, show a suggestion to create a new conversation. -->
+      <p v-else>
+        Create a new conversation to get started.
+      </p>
     </div>
     <Statusbar></Statusbar>
   </div>
@@ -36,8 +43,10 @@ import { useModelStore } from './pinia/models'
 import ModelManager from './ModelManager.vue'
 import WelcomeMessage from './WelcomeMessage.vue'
 import { useAppStateStore } from './pinia/app-state'
+import { useConversationStore } from './pinia/conversations'
 
 const modelStore = useModelStore()
+const conversationStore = useConversationStore()
 const appState = useAppStateStore()
 
 const sidebarWidth = ref<string>('200px')
