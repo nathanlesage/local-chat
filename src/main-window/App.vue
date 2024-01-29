@@ -146,7 +146,8 @@ div#toggle-sidebar {
 }
 
 div#toggle-sidebar.sidebar-open {
-  background: linear-gradient(to bottom, rgba(55, 55, 55, 1) 25%, rgba(55, 55, 55, .7) 75%, transparent 100%);
+  background-color: rgba(55, 55, 55, .7);
+  backdrop-filter: blur(5px);
   width: v-bind(sidebarWidth);
 }
 
