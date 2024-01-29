@@ -27,13 +27,14 @@
         <div class="message-generation-time" v-if="message.generationTime > 0">
           Generated in {{  formatGenerationTime(message.generationTime) }}s
         </div>
+        <div class="message-actions">
+          <LCButton icon="copy" square="true" title="Copy message to clipboard" v-on:click="copyMessageToClipboard(idx)"></LCButton>
+          <LCButton icon="trash-2" square="true" v-bind:type="'danger'" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
+        </div>
       </div>
       <div class="message-icon">
         <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
         <vue-feather v-else type="code"></vue-feather>
-      </div>
-      <div class="message-trash">
-        <LCButton icon="trash-2" v-bind:square="true" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
       </div>
       <div class="message-body" v-html="md2html(message.content)">
       </div>
@@ -150,6 +151,25 @@ function scrollChatDown () {
  */
 function md2html (content: string): string {
   return converter.makeHtml(content)
+}
+
+/**
+ * Copies a given message to the clipboard
+ *
+ * @param   {number}  idx  The message index
+ */
+function copyMessageToClipboard(idx: number) {
+  if (currentConversation.value === undefined) {
+    return
+  }
+
+  const plain = currentConversation.value.messages[idx].content
+  const html = md2html(plain)
+  const data = new ClipboardItem({
+    'text/plain': new Blob([plain], { type: 'text/plain' }),
+    'text/html': new Blob([html], { type: 'text/html' })
+  })
+  navigator.clipboard.write([data])
 }
 
 /**
@@ -321,10 +341,18 @@ textarea#prompt {
 .message .message-header {
   grid-area: header;
   display: grid;
-  margin-bottom: 10px;
   grid-template-columns: auto 100px;
   grid-template-areas: "user timestamp"
-  "generation-time timestamp";
+  "generation-time actions"
+  "blank actions";
+  align-items: center;
+}
+
+.message.user .message-header {
+  /* User messages don't have a generation time */
+  grid-template-areas: "user timestamp"
+  "user actions"
+  "user actions";
 }
 
 .message-header h4 {
@@ -338,6 +366,11 @@ textarea#prompt {
   grid-area: timestamp;
 }
 
+.message-header .message-actions {
+  grid-area: actions;
+  text-align: right;
+}
+
 .message-header .message-generation-time {
   font-size: 70%;
   grid-area: generation-time;
@@ -346,18 +379,6 @@ textarea#prompt {
 
 .message-header .message-timestamp, .message-header .message-generation-time {
   opacity: 0.5;
-}
-
-.message .message-trash {
-  grid-area: trash;
-}
-
-.message .message-trash button.icon {
-  display: none;
-}
-
-.message:hover .message-trash button.icon {
-  display: initial;
 }
 
 .message .message-body {
@@ -384,6 +405,9 @@ textarea#prompt {
 
 .message .message-icon {
   grid-area: icon;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /** Basic table styling */
