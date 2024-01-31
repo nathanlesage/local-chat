@@ -5,6 +5,14 @@
     v-on:mousemove="onResizing"
     v-bind:class="{ 'sidebar-hidden': !appState.showSidebar }"
   >
+    <aside v-show="appState.showSidebar" id="sidebar">
+      <div id="sidebar-header"></div>
+      <div id="sidebar-wrapper">
+        <ConversationManager></ConversationManager>
+      </div>
+    </aside>
+    <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
+
     <div
       id="toggle-sidebar"
       title="Toggle sidebar"
@@ -12,11 +20,6 @@
     >
       <vue-feather v-on:click="toggleSidebar" type="menu"></vue-feather>
     </div>
-
-    <aside v-show="appState.showSidebar" id="sidebar">
-      <ConversationManager></ConversationManager>
-    </aside>
-    <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
 
     <div id="chat-wrapper">
       <!-- Show modals if applicable -->
@@ -134,12 +137,24 @@ div#chat-wrapper {
 }
 
 aside#sidebar {
+  position: relative;
   grid-area: sidebar;
   background-color: rgb(55, 55, 55);
-  padding: 10px;
-  padding-top: 30px; /* NOTE: Accommodate for sidebar toggle */
   color: white;
   overflow-y: auto;
+}
+
+div#sidebar-wrapper {
+  padding: 10px;
+  padding-top: 40px;
+}
+
+div#sidebar-header {
+  width: v-bind(sidebarWidth);
+  height: 40px;
+  background-color: rgba(55, 55, 55, .7);
+  backdrop-filter: blur(5px);
+  position: fixed;
 }
 
 div#toggle-sidebar {
@@ -152,12 +167,6 @@ div#toggle-sidebar {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-}
-
-div#toggle-sidebar.sidebar-open {
-  background-color: rgba(55, 55, 55, .7);
-  backdrop-filter: blur(5px);
-  width: v-bind(sidebarWidth);
 }
 
 div#toggle-sidebar svg {
