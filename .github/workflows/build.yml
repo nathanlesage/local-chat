@@ -70,7 +70,7 @@ jobs:
           WIN32_CERT: "win32_cert.p12"
           WIN32_CERT_PASS: "${{ secrets.WIN32_CERT_PASS }}"
       - name: Cache installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: win32_x64
           # There are three files we have to upload. The Setup.exe is the main
@@ -119,7 +119,7 @@ jobs:
       - name: Release
         run: yarn release:mac-x64
       - name: Cache image file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: darwin_x64
           path: |
@@ -159,7 +159,7 @@ jobs:
       - name: Release
         run: yarn release:mac-arm
       - name: Cache image file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: darwin_arm64
           path: |
@@ -195,7 +195,7 @@ jobs:
           yarn package:linux-x64
           yarn release:linux-x64
       - name: Cache installers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux_x64
           path: |
@@ -225,7 +225,7 @@ jobs:
           yarn package:linux-arm
           yarn release:linux-arm
       - name: Cache installers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux_arm64
           path: |
@@ -269,7 +269,7 @@ jobs:
         run: mkdir ./release
       # Download all resulting assets from the previous steps.
       - name: Retrieve installers (Windows x86_64)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: win32_x64
           path: ./release
@@ -279,22 +279,22 @@ jobs:
       #     name: win32_arm64
       #     path: ./release # DEBUG: Disable win arm for now
       - name: Retrieve installers (macOS x86_64)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: darwin_x64
           path: ./release
       - name: Retrieve installers (macOS arm64)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: darwin_arm64
           path: ./release
       - name: Retrieve installers (Linux x86_64)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux_x64
           path: ./release
       - name: Retrieve installers (Linux arm64)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux_arm64
           path: ./release
