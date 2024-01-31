@@ -320,14 +320,14 @@ jobs:
       - name: Move files to ./release directory
         run: |
           mv ./out/make/LocalChat-${{env.version}}-arm64.dmg ./release
-          mv ./out/make/LocalChat-${{env.version}}-x64.dmg
-          mv ./out/make/deb/arm64/localchat_${{env.version}}_arm64.deb
-          mv ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb
-          mv ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip
-          mv ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip
-          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe
-          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg
-          mv ./out/make/squirrel.windows/x64/RELEASES
+          mv ./out/make/LocalChat-${{env.version}}-x64.dmg ./release
+          mv ./out/make/deb/arm64/localchat_${{env.version}}_arm64.deb ./release
+          mv ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb ./release
+          mv ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip ./release
+          mv ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip ./release
+          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe ./release
+          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg ./release
+          mv ./out/make/squirrel.windows/x64/RELEASES ./release
       # Generate the checksums
       - name: Generate SHA256 checksums
         # NOTE: We are not generating checksums for the NuPKG and RELEASES file,
