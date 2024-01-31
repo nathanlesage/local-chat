@@ -325,7 +325,7 @@ jobs:
           mv ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb ./release
           mv ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip ./release
           mv ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip ./release
-          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe ./release
+          mv "./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe" ./release
           mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg ./release
           mv ./out/make/squirrel.windows/x64/RELEASES ./release
       # Generate the checksums
