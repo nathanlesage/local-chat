@@ -5,6 +5,7 @@ import fs from 'fs'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
 import { Logger } from './main/Logger'
 import { awaitStartupTasks } from './main/util/lifecycle'
+import { UpdateSourceType, updateElectronApp } from 'update-electron-app'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -13,9 +14,33 @@ if (!app.requestSingleInstanceLock()) {
   app.exit(0)
 }
 
-// Run the pre-boot setup. NOTE: Must run before we instantiate the AppProvider!
+// To show notifications properly on Windows, we must manually set the appUserModelID
+// See https://www.electronjs.org/docs/tutorial/notifications#windows.
+if (process.platform === 'win32') {
+  // Since we are utilizing the Squirrel setup that enables us to auto-update,
+  // the application ID has to follow a specific pattern; see more here:
+  // https://www.electronjs.org/docs/latest/api/auto-updater
+  // NOTE: I could not verify if this is actually the AppUserModelId as set by
+  // Squirrel, since my work computer bugged out attempting to install it.
+  app.setAppUserModelId('com.squirrel.LocalChat.LocalChat')
+}
+
+// Step 1: Run the pre-boot setup.
+// NOTE: Must run before we instantiate the AppProvider!
 preBootSetup()
+// Step 2: Init logger now that the paths are correctly set.
 Logger.getLogger() // Init logger now that the paths are correctly set
+// Step 3: Initiate the updater now that console.log has been overwritten.
+updateElectronApp({
+  updateSource: {
+    type: UpdateSourceType.ElectronPublicUpdateService,
+    repo: 'nathanlesage/local-chat'
+  },
+  updateInterval: '1 hour',
+  // Very important so that the user can delay the update until the next start.
+  notifyUser: true
+})
+// Step 3: Initiate the app itself so that it can run some preboot logic.
 const localChat = new AppProvider()
 
 app.whenReady().then(async () => {

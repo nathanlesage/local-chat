@@ -57,6 +57,7 @@
     "style-loader": "^3.3.4",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",
+    "update-electron-app": "^3.0.0",
     "uuid": "^9.0.1",
     "vue": "^3.4.10",
     "vue-feather": "^2.0.0",
