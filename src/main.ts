@@ -34,6 +34,7 @@ Logger.getLogger() // Init logger now that the paths are correctly set
 updateElectronApp({
   updateSource: {
     type: UpdateSourceType.ElectronPublicUpdateService,
+    host: 'https://update.electronjs.org',
     repo: 'nathanlesage/local-chat'
   },
   updateInterval: '1 hour',
