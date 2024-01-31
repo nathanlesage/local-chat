@@ -75,10 +75,7 @@ jobs:
           name: win32_x64
           # There are three files we have to upload. The Setup.exe is the main
           # installer, the nupkg- and RELEASES-files are for updating.
-          path: |
-            ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe
-            ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg
-            ./out/make/squirrel.windows/x64/RELEASES
+          path: ./out
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
@@ -122,9 +119,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: darwin_x64
-          path: |
-            ./out/make/LocalChat-${{env.version}}-x64.dmg
-            ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip
+          path: ./out
 
   build_macos_arm64:
     name: macOS (arm64)
@@ -162,9 +157,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: darwin_arm64
-          path: |
-            ./out/make/LocalChat-${{env.version}}-arm64.dmg
-            ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip
+          path: ./out
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
@@ -198,8 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux_x64
-          path: |
-            ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb
+          path: ./out
           # BUG: See below
           # ./out/make/rpm/x64/localchat_${{env.version}}_x86_64.rpm
   build_linux_arm64:
@@ -228,8 +220,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux_arm64
-          path: |
-            ./out/make/deb/arm64/localchat_${{env.version}}_arm64.deb
+          path: ./out
           # BUG: See below
           # ./out/make/rpm/arm64/localchat_${{env.version}}_aarch64.rpm
 
@@ -265,39 +256,78 @@ jobs:
       - name: Retrieve tag version
         id: ref
         run: echo "version=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
-      - name: Make release directory
-        run: mkdir ./release
+      - name: Make out and release directories
+        run: |
+          mkdir ./out
+          mkdir ./release
       # Download all resulting assets from the previous steps.
       - name: Retrieve installers (Windows x86_64)
         uses: actions/download-artifact@v4
         with:
           name: win32_x64
-          path: ./release
-      # - name: Retrieve installers (Windows arm64)
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: win32_arm64
-      #     path: ./release # DEBUG: Disable win arm for now
+          path: ./out
       - name: Retrieve installers (macOS x86_64)
         uses: actions/download-artifact@v4
         with:
           name: darwin_x64
-          path: ./release
+          path: ./out
       - name: Retrieve installers (macOS arm64)
         uses: actions/download-artifact@v4
         with:
           name: darwin_arm64
-          path: ./release
+          path: ./out
       - name: Retrieve installers (Linux x86_64)
         uses: actions/download-artifact@v4
         with:
           name: linux_x64
-          path: ./release
+          path: ./out
       - name: Retrieve installers (Linux arm64)
         uses: actions/download-artifact@v4
         with:
           name: linux_arm64
-          path: ./release
+          path: ./out
+      # Next step: Move all the files to the root-level releases directory. This
+      # ensures that sha256sum will not prepend any weird paths that users would
+      # have a difficult time replicating just for checking the checksums.
+      # NOTE: The files are in the following directory structure:
+      #
+      # ./out
+      #   +--> make
+      #        |
+      #        |--> LocalChat-${{env.version}}-arm64.dmg
+      #        |--> LocalChat-${{env.version}}-x64.dmg
+      #        |
+      #        |--> deb
+      #        |    |--> x64
+      #        |    |    +--> localchat_${{env.version}}_amd64.deb
+      #        |    |
+      #        |    +--> arm64
+      #        |         +--> localchat_${{env.version}}_arm64.deb
+      #        |
+      #        |--> zip
+      #        |    +--> darwin
+      #        |         |--> arm64
+      #        |         |    +--> LocalChat-darwin-arm64-${{env.version}}.zip
+      #        |         |
+      #        |         +--> x64
+      #        |              +--> LocalChat-darwin-x64-${{env.version}}.zip
+      #        |
+      #        +--> squirrel.windows
+      #             +--> x64
+      #                  |--> LocalChat-${{env.version}} Setup.exe
+      #                  |--> LocalChat-${{env.version}}-full.nupkg
+      #                  +--> RELEASES
+      - name: Move files to ./release directory
+        run: |
+          mv ./out/make/LocalChat-${{env.version}}-arm64.dmg ./release
+          mv ./out/make/LocalChat-${{env.version}}-x64.dmg
+          mv ./out/make/deb/arm64/localchat_${{env.version}}_arm64.deb
+          mv ./out/make/deb/x64/localchat_${{env.version}}_amd64.deb
+          mv ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip
+          mv ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip
+          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe
+          mv ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg
+          mv ./out/make/squirrel.windows/x64/RELEASES
       # Generate the checksums
       - name: Generate SHA256 checksums
         # NOTE: We are not generating checksums for the NuPKG and RELEASES file,
@@ -305,14 +335,13 @@ jobs:
         # checksums in the RELEASES file.
         run: |
           cd ./release
-          ls -al
-          sha256sum "LocalChat-${{env.version}} Setup.exe" > "SHA256SUMS.txt"
-          sha256sum "LocalChat-${{env.version}}-x64.dmg" >> "SHA256SUMS.txt"
-          sha256sum "LocalChat-darwin-x64-${{env.version}}.zip" >> "SHA256SUMS.txt"
-          sha256sum "LocalChat-${{env.version}}-arm64.dmg" >> "SHA256SUMS.txt"
-          sha256sum "LocalChat-darwin-arm64-${{env.version}}.zip" >> "SHA256SUMS.txt"
-          sha256sum "localchat_${{env.version}}_amd64.deb" >> "SHA256SUMS.txt"
+          sha256sum "localchat_${{env.version}}_amd64.deb" > "SHA256SUMS.txt"
           sha256sum "localchat_${{env.version}}_arm64.deb" >> "SHA256SUMS.txt"
+          sha256sum "LocalChat-${{env.version}} Setup.exe" >> "SHA256SUMS.txt"
+          sha256sum "LocalChat-${{env.version}}-arm64.dmg" >> "SHA256SUMS.txt"
+          sha256sum "LocalChat-${{env.version}}-x64.dmg" >> "SHA256SUMS.txt"
+          sha256sum "LocalChat-darwin-arm64-${{env.version}}.zip" >> "SHA256SUMS.txt"
+          sha256sum "LocalChat-darwin-x64-${{env.version}}.zip" >> "SHA256SUMS.txt"
           cd ..
         # BUG: The rpm builder doesn't like it (see forge.config.js)
         # sha256sum "localchat_${{env.version}}_x86_64.rpm" >> "SHA256SUMS.txt"
@@ -333,15 +362,15 @@ jobs:
           body: If you can read this, we have forgotten to fill in the changelog. Sorry!
           draft: true # Always create as draft, so that we can populate the remaining values easily
           files: |
-            ./release/LocalChat-${{env.version}} Setup.exe
-            ./release/LocalChat-${{env.version}}-full.nupkg
-            ./release/RELEASES
-            ./release/LocalChat-${{env.version}}-x64.dmg
-            ./release/LocalChat-darwin-x64-${{env.version}}.zip
-            ./release/LocalChat-${{env.version}}-arm64.dmg
-            ./release/LocalChat-darwin-arm64-${{env.version}}.zip
             ./release/localchat_${{env.version}}_amd64.deb
             ./release/localchat_${{env.version}}_arm64.deb
+            ./release/LocalChat-${{env.version}} Setup.exe
+            ./release/LocalChat-${{env.version}}-arm64.dmg
+            ./release/LocalChat-${{env.version}}-full.nupkg
+            ./release/LocalChat-${{env.version}}-x64.dmg
+            ./release/LocalChat-darwin-arm64-${{env.version}}.zip
+            ./release/LocalChat-darwin-x64-${{env.version}}.zip
+            ./release/RELEASES
             ./release/SHA256SUMS.txt
           # BUG: See above
           # ./release/localchat_${{env.version}}_x86_64.rpm
