@@ -124,6 +124,7 @@ jobs:
           name: darwin_x64
           path: |
             ./out/make/LocalChat-${{env.version}}-x64.dmg
+            ./out/make/zip/darwin/x64/LocalChat-darwin-x64-${{env.version}}.zip
 
   build_macos_arm64:
     name: macOS (arm64)
@@ -163,6 +164,7 @@ jobs:
           name: darwin_arm64
           path: |
             ./out/make/LocalChat-${{env.version}}-arm64.dmg
+            ./out/make/zip/darwin/arm64/LocalChat-darwin-arm64-${{env.version}}.zip
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
