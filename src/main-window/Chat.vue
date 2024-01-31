@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUpdated, toRef, watch } from 'vue'
+import { ref, onUpdated, toRef, watch, onMounted } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { useConversationStore } from './pinia/conversations'
@@ -190,6 +190,7 @@ function copyMessageToClipboard(idx: number) {
  * updated.
  */
 onUpdated(() => { hljs.highlightAll() })
+onMounted(() => { hljs.highlightAll() })
 
 /**
  * Takes the user message and generates a response to it. This also registers
