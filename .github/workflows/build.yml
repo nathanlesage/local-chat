@@ -73,8 +73,12 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: win32_x64
+          # There are three files we have to upload. The Setup.exe is the main
+          # installer, the nupkg- and RELEASES-files are for updating.
           path: |
             ./out/make/squirrel.windows/x64/LocalChat-${{env.version}} Setup.exe
+            ./out/make/squirrel.windows/x64/LocalChat-${{env.version}}-full.nupkg
+            ./out/make/squirrel.windows/x64/RELEASES
 
   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
   #                                                                           #
@@ -321,9 +325,10 @@ jobs:
           name: Release v${{env.version}}
           body: If you can read this, we have forgotten to fill in the changelog. Sorry!
           draft: true # Always create as draft, so that we can populate the remaining values easily
-          # Gosh, is that convenient as opposed to earlier!
           files: |
             ./release/LocalChat-${{env.version}} Setup.exe
+            ./release/LocalChat-${{env.version}}-full.nupkg
+            ./release/RELEASES
             ./release/LocalChat-${{env.version}}-x64.dmg
             ./release/LocalChat-${{env.version}}-arm64.dmg
             ./release/localchat_${{env.version}}_amd64.deb
