@@ -66,7 +66,9 @@ module.exports = {
         authors: 'Hendrik Erz',
         description: 'LocalChat is your personal assistant: An LLM running locally on your computer.',
         certificateFile: process.env.WIN32_CERT,
-        certificatePassword: process.env.WIN32_CERT_PASS
+        certificatePassword: process.env.WIN32_CERT_PASS,
+        // Don't ask me, read https://js.electronforge.io/interfaces/_electron_forge_maker_squirrel.InternalOptions.Options.html#iconUrl
+        iconUrl: 'https://raw.githubusercontent.com/nathanlesage/local-chat/master/static/icon.ico'
       }
     },
     {
