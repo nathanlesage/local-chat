@@ -155,6 +155,7 @@ div#sidebar-header {
   background-color: rgba(55, 55, 55, .7);
   backdrop-filter: blur(5px);
   position: fixed;
+  z-index: 1;
 }
 
 div#toggle-sidebar {
@@ -167,6 +168,7 @@ div#toggle-sidebar {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  z-index: 1;
 }
 
 div#toggle-sidebar svg {
