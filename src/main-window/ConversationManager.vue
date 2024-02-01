@@ -19,7 +19,7 @@
         <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
         <input
           v-if="conversationRename !== undefined && conversationRename === conv.id"
-          id="conversation-rename-field"
+          ref="conversationRenameField"
           type="text"
           placeholder="Describe this conversation..."
           v-model="conversationDescription"
@@ -55,7 +55,7 @@
 import { ConversationsYearMonth, useConversationStore } from './pinia/conversations'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
-import { ref, computed, onUpdated } from 'vue'
+import { ref, computed, watch } from 'vue'
 import LCButton from './reusable-components/LCButton.vue'
 
 const conversationStore = useConversationStore()
@@ -63,21 +63,19 @@ const modelStore = useModelStore()
 const ipcRenderer = window.ipc
 
 const conversationRename = ref<string|undefined>(undefined)
+// NOTE: Since the rename field is within a v-for directive, it will be an array.
+const conversationRenameField = ref<HTMLInputElement[]|null>(null)
 const conversationDescription = ref<string>('')
 
 const filteredConv = computed<ConversationsYearMonth[]>(() => {
   return conversationStore.conversationsByYearMonth
 })
 
-onUpdated(() => {
-  // If we are currently renaming, give focus to the input field that should now
-  // be present in the DOM.
-  if (conversationRename.value !== undefined) {
-    const input = document.querySelector('#conversation-rename-field')
-    if (input instanceof HTMLInputElement) {
-      input.focus()
-      input.select()
-    }
+watch(conversationRenameField, (value, oldValue) => {
+  if (value !== null && oldValue === null)   {
+    // NOTE: Since the rename field is within a v-for directive, it will be an array.
+    value[0].focus()
+    value[0].select()
   }
 })
 
