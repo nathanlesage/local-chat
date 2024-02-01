@@ -5,47 +5,44 @@
       No conversations.
     </div>
 
-    <div
-      v-else
-      v-for="conv in conversationStore.conversations"
-      v-bind:class="{
-        conversation: true,
-        active: conversationStore.activeConversation === conv.id }"
-      v-on:click="selectConversation(conv.id)"
-    >
-      <h3>{{ modelStore.getModelName(conv.modelPath) ?? 'Unknown model' }}</h3>
-      <span class="timestamp" v-bind:title="`Conversation ${conv.id}`">
-        {{ formatDate(conv.startedAt, 'date') }}
-      </span>
-
-      <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
-      <input
-        v-if="conversationRename !== undefined && conversationRename === conv.id"
-        type="text"
-        placeholder="Describe this conversation..."
-        v-model="conversationDescription"
-        v-on:keydown.shift.enter.prevent="finishChangeDescription()"
-        v-on:keydown.enter.prevent="finishChangeDescription()"
-        v-on:keydown.esc.prevent="abortChangeDescription()"
-        v-on:click.prevent.stop=""
-        autofocus="true"
+    <details v-else class="conversation-group" v-for="group in filteredConv" open>
+      <summary>{{ monthNumberToName(group.month) }} {{ group.year }}</summary>
+      <div
+        v-for="conv in group.conversations"
+        v-bind:class="{
+          conversation: true,
+          active: conversationStore.activeConversation === conv.id }"
+        v-on:click="selectConversation(conv.id)"
       >
+        <h4>{{ modelStore.getModelName(conv.modelPath) ?? 'Unknown model' }}</h4>
 
-      <span v-if="conversationRename !== conv.id" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
-      
-      <span class="message-count">{{ conv.messages.length }} messages</span>
-      <div class="action-button-wrapper">
-        <LCButton
-          v-if="conversationRename === undefined"
-          icon="edit"
-          square="true"
-          v-on:click.prevent.stop="startChangeDescription(conv.id)"
-          title="Change description"
+        <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
+        <input
+          v-if="conversationRename !== undefined && conversationRename === conv.id"
+          type="text"
+          placeholder="Describe this conversation..."
+          v-model="conversationDescription"
+          v-on:keydown.shift.enter.prevent="finishChangeDescription()"
+          v-on:keydown.enter.prevent="finishChangeDescription()"
+          v-on:keydown.esc.prevent="abortChangeDescription()"
+          v-on:click.prevent.stop=""
+          autofocus="true"
         >
-        </LCButton>
-        <LCButton icon="trash-2" type="danger" square="true" v-on:click.prevent.stop="deleteConversation(conv.id)" title="Delete conversation"></LCButton>
+
+        <span v-if="conversationRename !== conv.id" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
+        <div class="action-button-wrapper">
+          <LCButton
+            v-if="conversationRename === undefined"
+            icon="edit"
+            square="true"
+            v-on:click.prevent.stop="startChangeDescription(conv.id)"
+            title="Change description"
+          >
+          </LCButton>
+          <LCButton icon="trash-2" type="danger" square="true" v-on:click.prevent.stop="deleteConversation(conv.id)" title="Delete conversation"></LCButton>
+        </div>
       </div>
-    </div>
+    </details>
 
     <div>
       <LCButton v-on:click="newConversation">New conversation</LCButton>
@@ -54,11 +51,10 @@
 </template>
 
 <script setup lang="ts">
-import { useConversationStore } from './pinia/conversations'
+import { ConversationsYearMonth, useConversationStore } from './pinia/conversations'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
-import { formatDate } from './util/dates'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import LCButton from './reusable-components/LCButton.vue'
 
 const conversationStore = useConversationStore()
@@ -67,6 +63,10 @@ const ipcRenderer = window.ipc
 
 const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
+
+const filteredConv = computed<ConversationsYearMonth[]>(() => {
+  return conversationStore.conversationsByYearMonth
+})
 
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
@@ -126,6 +126,30 @@ function abortChangeDescription () {
   conversationRename.value = undefined
   conversationDescription.value = ''
 }
+
+/**
+ * Turns, e.g., 3 into "March"
+ *
+ * @param   {number}  month  The month number
+ *
+ * @return  {string}         The month name
+ */
+function monthNumberToName (month: number): string {
+  return {
+    1: 'January',
+    2: 'February',
+    3: 'March',
+    4: 'April',
+    5: 'May',
+    6: 'June',
+    7: 'July',
+    8: 'August',
+    9: 'September',
+    10: 'October',
+    11: 'November',
+    12: 'December',
+  }[month] ?? String(month)
+}
 </script>
 
 <style>
@@ -138,8 +162,26 @@ div#conversations .conversation {
   margin-bottom: 10px;
   display: grid;
   grid-template-columns: auto 75px;
-  grid-template-areas: "title time" "description description" "count actions";
+  grid-template-areas: "title title" "description actions";
   align-items: center;
+}
+
+div#conversations details summary {
+  font-weight: bold;
+  margin: 10px 0;
+  /* Add a bit of spacing between the marker and the text */
+  list-style-position: outside;
+  padding-left: 10px;
+  margin-left: 10px;
+}
+
+div#conversations details summary::marker {
+  color: rgb(150, 150, 150);
+  content: "›";
+}
+
+div#conversations details[open] summary::marker {
+  content: "‹";
 }
 
 div#conversations .conversation button {
@@ -159,26 +201,13 @@ div#conversations .conversation input[type=text] {
   grid-area: description;
 }
 
-div#conversations .conversation h3 {
+div#conversations .conversation h4 {
   margin: 0;
   font-size: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   grid-area: title;
-}
-
-div#conversations .conversation .timestamp {
-  grid-area: time;
-  text-align: right;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-div#conversations .conversation .timestamp,
-div#conversations .conversation .message-count {
-  color: rgb(150, 150, 150);
 }
 
 div#conversations .conversation:hover, div#conversations .conversation.active {
@@ -190,14 +219,5 @@ div#conversations .conversation .description {
   margin: 5px 0;
   line-height: 120%;
   grid-area: description;
-}
-
-div#conversations .conversation .message-count {
-  display: block;
-  margin: 8px 0;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  grid-area: count
 }
 </style>
