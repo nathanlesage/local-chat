@@ -125,7 +125,7 @@ export class ConversationManager {
       this.updateConversation(conv)
     })
 
-    ipcMain.handle('prompt', async (event, args) => {
+    ipcMain.handle('prompt', async (event, args: string) => {
       const conversation = this.getConversation(this.activeConversation)
 
       if (conversation === undefined || !this.llamaProvider.isReady()) {
@@ -138,6 +138,20 @@ export class ConversationManager {
         timestamp: Date.now(),
         generationTime: 0
       })
+
+      // If this is the first message from user and they haven't given the conversation
+      // a description yet, update the description automatically.
+      if (conversation.messages.length === 1 && conversation.description.trim() === '') {
+        // Only take the first line, first sentence.
+        let newDescription = args.split('\n')[0].split('. ')[0]
+        // Maximum of 80 characters, chop off and indicate with ellipsis.
+        if (newDescription.length > 80) {
+          newDescription = newDescription.substring(0, 80)
+          newDescription = newDescription.substring(0, newDescription.lastIndexOf(' '))
+          newDescription += ' …'
+        }
+        conversation.description = newDescription
+      }
 
       // NOTE: We now have a new message, which would prompt the provider to
       // reload the model, but in this specific instance, we don't want to
