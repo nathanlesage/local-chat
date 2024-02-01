@@ -19,6 +19,7 @@
         <!-- NOTE: The input allows both Enter and Shift-Enter to change the description -->
         <input
           v-if="conversationRename !== undefined && conversationRename === conv.id"
+          id="conversation-rename-field"
           type="text"
           placeholder="Describe this conversation..."
           v-model="conversationDescription"
@@ -29,8 +30,8 @@
           autofocus="true"
         >
 
-        <span v-if="conversationRename !== conv.id" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</span>
-        <div class="action-button-wrapper">
+        <p v-if="conversationRename !== conv.id" class="description">{{ conv.description !== '' ? conv.description : 'No description' }}</p>
+        <div v-if="conversationRename !== conv.id" class="action-button-wrapper">
           <LCButton
             v-if="conversationRename === undefined"
             icon="edit"
@@ -54,7 +55,7 @@
 import { ConversationsYearMonth, useConversationStore } from './pinia/conversations'
 import { useModelStore } from './pinia/models'
 import { alertError } from './util/prompts'
-import { ref, computed } from 'vue'
+import { ref, computed, onUpdated } from 'vue'
 import LCButton from './reusable-components/LCButton.vue'
 
 const conversationStore = useConversationStore()
@@ -68,12 +69,25 @@ const filteredConv = computed<ConversationsYearMonth[]>(() => {
   return conversationStore.conversationsByYearMonth
 })
 
+onUpdated(() => {
+  // If we are currently renaming, give focus to the input field that should now
+  // be present in the DOM.
+  if (conversationRename.value !== undefined) {
+    const input = document.querySelector('#conversation-rename-field')
+    if (input instanceof HTMLInputElement) {
+      input.focus()
+      input.select()
+    }
+  }
+})
+
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
     .catch(err => alertError(err))
 }
 
 function selectConversation (conversationId: string) {
+  abortChangeDescription()
   ipcRenderer.invoke('select-conversation', conversationId)
     .catch(err => alertError(err))
 }
@@ -89,7 +103,6 @@ function deleteConversation (conversationId: string) {
  * @param   {string}  conversationId  The conversation to be rephrased
  */
 function startChangeDescription (conversationId: string) {
-  console.log('Starting rename')
   const convo = conversationStore.conversations.find(c => c.id === conversationId)
   if (convo === undefined) {
     return
@@ -153,19 +166,6 @@ function monthNumberToName (month: number): string {
 </script>
 
 <style>
-div#conversations .conversation {
-  padding: 5px;
-  border-radius: 8px;
-  font-size: 80%;
-  line-height: 20px;
-  cursor: default;
-  margin-bottom: 10px;
-  display: grid;
-  grid-template-columns: auto 75px;
-  grid-template-areas: "title title" "description actions";
-  align-items: center;
-}
-
 div#conversations details summary {
   font-weight: bold;
   margin: 10px 0;
@@ -184,17 +184,28 @@ div#conversations details[open] summary::marker {
   content: "‹";
 }
 
+div#conversations .conversation {
+  position: relative;
+  padding: 5px;
+  border-radius: 8px;
+  font-size: 80%;
+  line-height: 20px;
+  cursor: default;
+  margin-bottom: 10px;
+}
+
+div#conversations .action-button-wrapper {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
 div#conversations .conversation button {
   display: none;
 }
 
 div#conversations .conversation:hover button {
   display: initial;
-}
-
-div#conversations .conversation .action-button-wrapper {
-  grid-area: actions;
-  text-align: right;
 }
 
 div#conversations .conversation input[type=text] {
@@ -204,10 +215,10 @@ div#conversations .conversation input[type=text] {
 div#conversations .conversation h4 {
   margin: 0;
   font-size: 100%;
+  line-height: 200%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  grid-area: title;
 }
 
 div#conversations .conversation:hover, div#conversations .conversation.active {
@@ -218,6 +229,5 @@ div#conversations .conversation .description {
   display: block;
   margin: 5px 0;
   line-height: 120%;
-  grid-area: description;
 }
 </style>
