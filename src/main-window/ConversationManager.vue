@@ -1,10 +1,9 @@
 <template>
   <div id="conversations">
-    <h2 style="font-size: 100%;">Your Conversations</h2>
     <div v-if="conversationStore.conversations.length === 0">
-      No conversations.
+      <h2 style="font-size: 100%;">Your Conversations</h2>
+      <p>No conversations.</p>
     </div>
-
     <details v-else class="conversation-group" v-for="group in filteredConv" open>
       <summary>{{ monthNumberToName(group.month) }} {{ group.year }}</summary>
       <div
@@ -44,10 +43,6 @@
         </div>
       </div>
     </details>
-
-    <div>
-      <LCButton v-on:click="newConversation">New conversation</LCButton>
-    </div>
   </div>
 </template>
 
@@ -78,11 +73,6 @@ onUpdated(() => {
     }
   }
 })
-
-function newConversation () {
-  ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
-    .catch(err => alertError(err))
-}
 
 function selectConversation (conversationId: string) {
   abortChangeDescription()

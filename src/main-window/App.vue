@@ -6,7 +6,9 @@
     v-bind:class="{ 'sidebar-hidden': !appState.showSidebar }"
   >
     <aside v-show="appState.showSidebar" id="sidebar">
-      <div id="sidebar-header"></div>
+      <div id="sidebar-header">
+        <LCButton v-on:click="newConversation" icon="plus-square" square="true" title="New conversation"></LCButton>
+      </div>
       <div id="sidebar-wrapper">
         <ConversationManager></ConversationManager>
       </div>
@@ -45,8 +47,12 @@ import { ref } from 'vue'
 import { useModelStore } from './pinia/models'
 import ModelManager from './ModelManager.vue'
 import WelcomeMessage from './WelcomeMessage.vue'
+import LCButton from './reusable-components/LCButton.vue'
 import { useAppStateStore } from './pinia/app-state'
 import { useConversationStore } from './pinia/conversations'
+import { alertError } from './util/prompts'
+
+const ipcRenderer = window.ipc
 
 const modelStore = useModelStore()
 const conversationStore = useConversationStore()
@@ -56,6 +62,11 @@ const sidebarWidth = ref<string>('200px')
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
+
+function newConversation () {
+  ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
+    .catch(err => alertError(err))
+}
 
 function beginResizing (event: MouseEvent) {
   if (!appState.showSidebar) {
@@ -156,6 +167,8 @@ div#sidebar-header {
   backdrop-filter: blur(5px);
   position: fixed;
   z-index: 1;
+  padding: 10px;
+  text-align: right;
 }
 
 div#toggle-sidebar {
