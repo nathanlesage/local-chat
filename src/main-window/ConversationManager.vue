@@ -6,7 +6,7 @@
     </div>
     <details
       v-else class="conversation-group"
-      v-for="(group, idx) in filteredConv" v-bind:open="idx === 0"
+      v-for="(group, idx) in filteredConv" v-bind:open="idx === 0 || filter.trim().length > 0"
     >
       <summary>{{ monthNumberToName(group.month) }} {{ group.year }}</summary>
       <div
@@ -56,6 +56,8 @@ import { alertError } from './util/prompts'
 import { ref, computed, onUpdated } from 'vue'
 import LCButton from './reusable-components/LCButton.vue'
 
+const props = defineProps<{ filter: string }>()
+
 const conversationStore = useConversationStore()
 const modelStore = useModelStore()
 const ipcRenderer = window.ipc
@@ -64,9 +66,32 @@ const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
 
 const filteredConv = computed<ConversationsYearMonth[]>(() => {
+  const q = props.filter.trim().toLowerCase()
+
   return conversationStore
     .conversationsByYearMonth
-    // Remove empty conversations, will help keep the interface clean
+    .map(group => {
+      return {
+        ...group,
+        conversations: group.conversations.filter(conv => {
+          // If the query is empty, include everything
+          if (q === '') {
+            return true
+          }
+
+          // Otherwise, check the conversation's description ...
+          if (conv.description.toLowerCase().includes(q)) {
+            return true
+          } else {
+            return conv.messages.filter(msg => {
+              // ... as well as each message
+              return msg.content.toLowerCase().includes(q)
+            }).length > 0
+          }
+        })
+      }
+    })
+    // Remove empty conversation groups after the filtering operation
     .filter(group => group.conversations.length > 0)
 })
 

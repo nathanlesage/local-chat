@@ -7,10 +7,22 @@
   >
     <aside v-show="appState.showSidebar" id="sidebar">
       <div id="sidebar-header">
-        <LCButton v-on:click="newConversation" icon="plus-square" square="true" title="New conversation"></LCButton>
+        <template v-if="showSearchBar">
+          <input
+            ref="filterInput"
+            type="search"
+            placeholder="Search…"
+            v-model="conversationFilterQuery"
+            v-on:keydown.prevent.escape="showSearchBar = false"
+          >
+        </template>
+        <template v-else>
+          <LCButton v-on:click="showSearchBar = true" type="primary" icon="search" square="true" title="Search conversations"></LCButton>
+          <LCButton v-on:click="newConversation" icon="plus-square" square="true" title="New conversation"></LCButton>
+        </template>
       </div>
       <div id="sidebar-wrapper">
-        <ConversationManager></ConversationManager>
+        <ConversationManager v-bind:filter="conversationFilterQuery"></ConversationManager>
       </div>
     </aside>
     <div v-if="appState.showSidebar" id="resizer" v-on:mousedown="beginResizing"></div>
@@ -20,7 +32,14 @@
       title="Toggle sidebar"
       v-bind:class="{ 'sidebar-open': appState.showSidebar }"
     >
-      <vue-feather v-on:click="toggleSidebar" type="menu"></vue-feather>
+      <vue-feather
+        v-if="!showSearchBar"
+        v-on:click="toggleSidebar" type="menu"
+      ></vue-feather>
+      <vue-feather
+        v-else
+        v-on:click="showSearchBar = false" type="x"
+      ></vue-feather>
     </div>
 
     <div id="chat-wrapper">
@@ -43,7 +62,7 @@
 import Chat from './Chat.vue'
 import Statusbar from './Statusbar.vue'
 import ConversationManager from './ConversationManager.vue'
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { useModelStore } from './pinia/models'
 import ModelManager from './ModelManager.vue'
 import WelcomeMessage from './WelcomeMessage.vue'
@@ -58,10 +77,26 @@ const modelStore = useModelStore()
 const conversationStore = useConversationStore()
 const appState = useAppStateStore()
 
+const showSearchBar = ref<boolean>(false) // DEBUG
+const conversationFilterQuery = ref<string>('')
+const filterInput = ref<HTMLInputElement|null>(null)
+
 const sidebarWidth = ref<string>('200px')
 
 const isResizing = ref<boolean>(false)
 const lastOffset = ref<number>(0)
+
+watch(showSearchBar, (newValue, oldValue) => {
+  if (!oldValue && newValue) {
+    nextTick().then(() =>{
+      // Focus filter input
+      filterInput.value?.focus()
+      filterInput.value?.select()
+    })
+  } else if (!newValue) {
+    conversationFilterQuery.value = '' // Reset filter
+  }
+})
 
 function newConversation () {
   ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
@@ -133,6 +168,7 @@ function toggleSidebar () {
 
 :root {
   --footer-height: 30px;
+  --sidebar-header-height: 40px;
 }
 
 div#app {
@@ -157,18 +193,30 @@ aside#sidebar {
 
 div#sidebar-wrapper {
   padding: 10px;
-  padding-top: 40px;
+  padding-top: var(--sidebar-header-height);
 }
 
 div#sidebar-header {
   width: v-bind(sidebarWidth);
-  height: 40px;
+  height: var(--sidebar-header-height);
   background-color: rgba(55, 55, 55, .7);
   backdrop-filter: blur(5px);
   position: fixed;
   z-index: 1;
   padding: 10px;
   text-align: right;
+}
+
+div#sidebar-header input[type="search"] {
+  height: var(--sidebar-header-height);
+  width: v-bind(sidebarWidth);
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  display: block;
+  padding: 0;
+  padding-left: 40px; /* Offset from the sidebar hiding button */
+  margin: -10px;
 }
 
 div#toggle-sidebar {
