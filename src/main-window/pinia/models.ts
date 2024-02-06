@@ -4,17 +4,9 @@ import { alertError } from '../util/prompts'
 import type { ModelDescriptor, ModelDownloadStatus } from 'src/main/ModelManager'
 
 import { ref } from 'vue'
-import { LlamaStatus } from 'src/main/LlamaProvider'
+import type { LlamaCppInfo, LlamaStatus } from 'src/main/LlamaProvider'
 
 const ipcRenderer = window.ipc
-
-interface LlamaCppInfo {
-  moduleVersion: string
-  llamaCpp: {
-    binarySource: string
-    release: string
-  }
-}
 
 /**
  * This store handles anything relating to available models.

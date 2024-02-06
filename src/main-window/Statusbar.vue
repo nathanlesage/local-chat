@@ -23,9 +23,9 @@
           <a
             v-if="modelStore.llamaInfo !== undefined"
             title="Click for more info about this llama.cpp release"
-            v-bind:href="`https://github.com/ggerganov/llama.cpp/releases/tag/${modelStore.llamaInfo.llamaCpp.release}`"
+            v-bind:href="`https://github.com/${modelStore.llamaInfo.repo}/releases/tag/${modelStore.llamaInfo.release}`"
           >
-            {{ modelStore.llamaInfo.llamaCpp.release }}
+            {{ modelStore.llamaInfo.release }}
           </a>
           <span v-else title="Llama.cpp release is unknown">unknown</span>
         </code>)

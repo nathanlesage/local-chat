@@ -1,12 +1,7 @@
 import { ipcMain } from 'electron'
 import type {
   LlamaChatSession,
-  LlamaModel,
-  LlamaContext,
   ChatHistoryItem,
-  LlamaChatSessionOptions,
-  LlamaContextOptions,
-  LlamaModelOptions,
   ChatWrapper
 } from 'node-llama-cpp'
 import mod from 'node-llama-cpp'
@@ -49,6 +44,11 @@ async function llamaModule (): Promise<typeof import('node-llama-cpp')> {
   return await (mod as any)
 }
 
+export interface LlamaCppInfo {
+  repo: string
+  release: string
+}
+
 export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
 
 export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
@@ -89,8 +89,10 @@ export class LlamaProvider {
       return this.status
     })
 
-    ipcMain.handle('get-llama-info', async (event) => {
-      return await (await llamaModule()).getReleaseInfo()
+    ipcMain.handle('get-llama-info', async (event): Promise<LlamaCppInfo> => {
+      const module = await llamaModule()
+      const llama = await module.getLlama()
+      return llama.llamaCppRelease
     })
 
     ipcMain.handle('force-reload-model', (event) => {
@@ -166,18 +168,18 @@ export class LlamaProvider {
   }
 
   private async getChatTemplateWrapper (prompt: string): Promise<'auto'|ChatWrapper> {
-    const resolved = await llamaModule()
+    const module = await llamaModule()
     switch (prompt) {
       case 'llama':
-        return new resolved.LlamaChatWrapper()
+        return new module.LlamaChatWrapper()
       case 'chatml':
-        return new resolved.ChatMLChatWrapper()
+        return new module.ChatMLChatWrapper()
       case 'falcon':
-        return new resolved.FalconChatWrapper()
+        return new module.FalconChatWrapper()
       case 'general':
-        return new resolved.GeneralChatWrapper()
+        return new module.GeneralChatWrapper()
       case 'empty':
-        return new resolved.EmptyChatWrapper()
+        return new module.EmptyChatWrapper()
       default:
         return 'auto'
     }
@@ -193,45 +195,60 @@ export class LlamaProvider {
       return // Nothing to do
     }
 
-    const resolved = await llamaModule()
-    this.lastLoadedConversation = structuredClone(conversation)
-    this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
-    
-    console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
-    const model: LlamaModel = new resolved.LlamaModel({
-      modelPath: modelDescriptor.path,
-      gpuLayers: getGPULayersToUse()
-    } as LlamaModelOptions)
-    console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.\x1b[0m`)
+    const module = await llamaModule()
 
-    const context: LlamaContext = new resolved.LlamaContext({
-        model,
-        contextSize: modelDescriptor.config.contextLengthOverride
-    } as LlamaContextOptions)
+    try {
+      this.lastLoadedConversation = structuredClone(conversation)
+      this.setStatus('loading', `Loading model ${modelDescriptor.name}`)
 
-    this.session = new resolved.LlamaChatSession({
-        contextSequence: context.getSequence(),
-        systemPrompt: conversation?.systemPrompt,
-        chatWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
-    } as LlamaChatSessionOptions)
+      const llama = await module.getLlama({
+        // Only print out warnings or above
+        logLevel: module.LlamaLogLevel.warn,
+        // Never attempt to actually build the binaries (those should only be shipped)
+        build: 'never',
+        // Don't output loading progress logs
+        progressLogs: false
+        // TODO: Enable users to set the CUDA options
+        // cuda: true/false
+      })
+      
+      console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
+      const model = new module.LlamaModel({
+        llama,
+        modelPath: modelDescriptor.path,
+        gpuLayers: getGPULayersToUse()
+      })
+      console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.\x1b[0m`)
 
-    if (conversation !== undefined) {
-      const history = this.convertConversationMessages(conversation.messages)
-      if (conversation.systemPrompt !== undefined) {
-        history.unshift({ type: 'system', text: conversation.systemPrompt })
+      const context = new module.LlamaContext({
+          model,
+          contextSize: modelDescriptor.config.contextLengthOverride
+      })
+
+      this.session = new module.LlamaChatSession({
+          contextSequence: context.getSequence(),
+          systemPrompt: conversation?.systemPrompt,
+          chatWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
+      })
+
+      if (conversation !== undefined) {
+        const history = this.convertConversationMessages(conversation.messages)
+        if (conversation.systemPrompt !== undefined) {
+          history.unshift({ type: 'system', text: conversation.systemPrompt })
+        }
+        this.session.setChatHistory(history)
+        console.log(`\x1b[1;31mSession initialized with ${history.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+      } else {
+        console.log(`\x1b[1;31mSession initialized with no messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
       }
-      this.session.setChatHistory(history)
-      console.log(`\x1b[1;31mSession initialized with ${history.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
-    } else {
-      console.log(`\x1b[1;31mSession initialized with no messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+
+      this.loadedModel = structuredClone(modelDescriptor)
+      this.setStatus('ready')
+      broadcastIPCMessage('loaded-model-updated', this.loadedModel)
+    } catch(err: any) {
+      console.error(err)
+      this.setStatus('error', String(err.message))
     }
-
-
-    this.loadedModel = structuredClone(modelDescriptor)
-
-    this.setStatus('ready')
-
-    broadcastIPCMessage('loaded-model-updated', this.loadedModel)
   }
 
   public async prompt (message: string, onToken?: (chunk: string) => void): Promise<string> {
