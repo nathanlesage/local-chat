@@ -64,7 +64,10 @@ const conversationRename = ref<string|undefined>(undefined)
 const conversationDescription = ref<string>('')
 
 const filteredConv = computed<ConversationsYearMonth[]>(() => {
-  return conversationStore.conversationsByYearMonth
+  return conversationStore
+    .conversationsByYearMonth
+    // Remove empty conversations, will help keep the interface clean
+    .filter(group => group.conversations.length > 0)
 })
 
 onUpdated(() => {
