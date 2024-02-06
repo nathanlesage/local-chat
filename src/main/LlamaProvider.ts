@@ -212,13 +212,13 @@ export class LlamaProvider {
         // cuda: true/false
       })
       
-      console.log(`\x1b[1;31mLoading new model: ${modelDescriptor.name}\x1b[0m`)
+      console.log(`Loading new model: ${modelDescriptor.name}`)
       const model = new module.LlamaModel({
         llama,
         modelPath: modelDescriptor.path,
         gpuLayers: getGPULayersToUse()
       })
-      console.log(`\x1b[1;31mModel ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.\x1b[0m`)
+      console.log(`Model ${modelDescriptor.name} loaded. Context size is ${model.trainContextSize}; will load with a context size of ${modelDescriptor.config.contextLengthOverride}. Instantiating new session.`)
 
       const context = new module.LlamaContext({
           model,
@@ -237,9 +237,9 @@ export class LlamaProvider {
           history.unshift({ type: 'system', text: conversation.systemPrompt })
         }
         this.session.setChatHistory(history)
-        console.log(`\x1b[1;31mSession initialized with ${history.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+        console.log(`Session initialized with ${history.length} messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.`)
       } else {
-        console.log(`\x1b[1;31mSession initialized with no messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.\x1b[0m`)
+        console.log(`Session initialized with no messages and prompt template "${modelDescriptor.config.prompt}". LlamaProvider ready.`)
       }
 
       this.loadedModel = structuredClone(modelDescriptor)
