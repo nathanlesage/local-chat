@@ -4,6 +4,7 @@ import { alertError } from '../util/prompts'
 import type { ModelDescriptor, ModelDownloadStatus } from 'src/main/ModelManager'
 
 import { ref } from 'vue'
+import { LlamaStatus } from 'src/main/LlamaProvider'
 
 const ipcRenderer = window.ipc
 
@@ -23,6 +24,8 @@ export const useModelStore = defineStore('model-store', () => {
   const currentModel = ref<ModelDescriptor|undefined>(undefined)
   const modelDownloadStatus = ref<ModelDownloadStatus>({ isDownloading: false, name: '', size_total: 0, size_downloaded: 0, start_time: 0, eta_seconds: 0, bytes_per_second: 0 })
   const llamaInfo = ref<LlamaCppInfo|undefined>(undefined)
+  // Copied from LlamaStatus since we cannot refer to things from the main process except for with Types
+  const llamaStatus = ref<LlamaStatus>({ status: 'uninitialized', message: 'Provider not initialized' })
 
   // Initial retrieval
   ipcRenderer.invoke('get-available-models').then((payload: ModelDescriptor[]) => {
@@ -43,6 +46,12 @@ export const useModelStore = defineStore('model-store', () => {
     llamaInfo.value = payload // Only retrieved once
   })
 
+  ipcRenderer.invoke('get-llama-status')
+    .then((status: LlamaStatus) => {
+      llamaStatus.value = status
+    })
+    .catch(err => alertError(err))
+
   // Listen to subsequent changes
   ipcRenderer.on('available-models-updated', (event, payload: ModelDescriptor[]) => {
     models.value = payload
@@ -54,6 +63,10 @@ export const useModelStore = defineStore('model-store', () => {
 
   ipcRenderer.on('model-download-status-updated', (event, newStatus: ModelDownloadStatus) => {
     modelDownloadStatus.value = newStatus
+  })
+
+  ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
+    llamaStatus.value = newStatus
   })
 
   // Helper functions
@@ -73,7 +86,11 @@ export const useModelStore = defineStore('model-store', () => {
   }
 
   return {
-    models, currentModel, modelDownloadStatus, llamaInfo,
+    // Model manager
+    models, currentModel, modelDownloadStatus,
+    // Llama Provider
+    llamaInfo, llamaStatus,
+    // Utility functions
     getModelDescriptor, getModelName
   }
 })

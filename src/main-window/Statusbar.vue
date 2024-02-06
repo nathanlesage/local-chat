@@ -18,7 +18,7 @@
     <!-- Model indication -->
     <div id="llama-status">
       <span>
-        {{ llamaStatus.message }}
+        {{ modelStore.llamaStatus.message }}
         (<code>
           <a
             v-if="modelStore.llamaInfo !== undefined"
@@ -71,26 +71,13 @@ const ipcRenderer = window.ipc
 const modelStore = useModelStore()
 const appState = useAppStateStore()
 
-// Copied from LlamaStatus since we cannot refer to things from the main process except for with Types
-const llamaStatus = ref<LlamaStatus>({ status: 'uninitialized', message: 'Provider not initialized' })
-
-ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
-  llamaStatus.value = newStatus
-})
-
 const isGenerating = computed<boolean>(() => {
-  return llamaStatus.value.status === 'generating'
+  return modelStore.llamaStatus.status === 'generating'
 })
 
 const isLoading = computed<boolean>(() => {
-  return llamaStatus.value.status === 'loading'
+  return modelStore.llamaStatus.status === 'loading'
 })
-
-ipcRenderer.invoke('get-llama-status')
-  .then((status: LlamaStatus) => {
-    llamaStatus.value = status
-  })
-  .catch(err => alertError(err))
 
 function cancelDownload () {
   ipcRenderer.invoke('cancel-download').catch(err => alertError(err))
