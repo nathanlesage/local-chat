@@ -4,7 +4,10 @@
       <h2 style="font-size: 100%;">Your Conversations</h2>
       <p>No conversations.</p>
     </div>
-    <details v-else class="conversation-group" v-for="group in filteredConv" open>
+    <details
+      v-else class="conversation-group"
+      v-for="(group, idx) in filteredConv" v-bind:open="idx === 0"
+    >
       <summary>{{ monthNumberToName(group.month) }} {{ group.year }}</summary>
       <div
         v-for="conv in group.conversations"
