@@ -47,6 +47,11 @@ async function llamaModule (): Promise<typeof import('node-llama-cpp')> {
 export interface LlamaCppInfo {
   repo: string
   release: string
+  vramState: {
+    total: number
+    used: number
+    free: number
+  }
 }
 
 export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
@@ -92,7 +97,7 @@ export class LlamaProvider {
     ipcMain.handle('get-llama-info', async (event): Promise<LlamaCppInfo> => {
       const module = await llamaModule()
       const llama = await module.getLlama()
-      return llama.llamaCppRelease
+      return { ...llama.llamaCppRelease, vramState: llama.getVramState() }
     })
 
     ipcMain.handle('force-reload-model', (event) => {

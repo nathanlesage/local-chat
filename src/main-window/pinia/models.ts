@@ -35,7 +35,7 @@ export const useModelStore = defineStore('model-store', () => {
     .catch(err => alertError(err))
 
   ipcRenderer.invoke('get-llama-info').then((payload: LlamaCppInfo) => {
-    llamaInfo.value = payload // Only retrieved once
+    llamaInfo.value = payload
   })
 
   ipcRenderer.invoke('get-llama-status')
@@ -60,6 +60,13 @@ export const useModelStore = defineStore('model-store', () => {
   ipcRenderer.on('llama-status-updated', (event, newStatus: LlamaStatus) => {
     llamaStatus.value = newStatus
   })
+
+  // Get llama.cpp info (including used VRAM) every 10 seconds
+  setInterval(() => {
+    ipcRenderer.invoke('get-llama-info').then((payload: LlamaCppInfo) => {
+      llamaInfo.value = payload
+    })
+  }, 10_000)
 
   // Helper functions
   function getModelDescriptor (modelId: string): ModelDescriptor|undefined {

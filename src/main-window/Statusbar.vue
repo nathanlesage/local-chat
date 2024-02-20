@@ -19,16 +19,19 @@
     <div id="llama-status">
       <span>
         {{ modelStore.llamaStatus.message }}
-        (<code>
-          <a
-            v-if="modelStore.llamaInfo !== undefined"
-            title="Click for more info about this llama.cpp release"
-            v-bind:href="`https://github.com/${modelStore.llamaInfo.repo}/releases/tag/${modelStore.llamaInfo.release}`"
-          >
-            {{ modelStore.llamaInfo.release }}
-          </a>
-          <span v-else title="Llama.cpp release is unknown">unknown</span>
-        </code>)
+        <template v-if="modelStore.llamaInfo !== undefined">
+          (<code>
+            <a
+              title="Click for more info about this llama.cpp release"
+              v-bind:href="`https://github.com/${modelStore.llamaInfo.repo}/releases/tag/${modelStore.llamaInfo.release}`"
+            >
+              {{ modelStore.llamaInfo.release }}
+            </a>
+          </code> &mdash; {{ formatSize(modelStore.llamaInfo.vramState.used) }}/{{ formatSize(modelStore.llamaInfo.vramState.total) }})
+        </template>
+        <template v-else>
+          (<code><span title="Llama.cpp release is unknown">unknown</span></code>)
+        </template>
       </span>
       <LCButton
         v-if="!isGenerating && !isLoading"
@@ -57,8 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { LlamaStatus } from 'src/main/LlamaProvider'
+import { computed } from 'vue'
 import { alertError } from './util/prompts'
 import LCButton from './reusable-components/LCButton.vue'
 import { formatSeconds } from './util/dates'
