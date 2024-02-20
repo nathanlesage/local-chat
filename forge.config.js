@@ -1,3 +1,6 @@
+const { FusesPlugin } = require('@electron-forge/plugin-fuses')
+const { FuseV1Options, FuseVersion } = require('@electron/fuses')
+
 module.exports = {
   hooks: {},
   rebuildConfig: {
@@ -53,7 +56,18 @@ module.exports = {
           ]
         }
       }
-    }
+    },
+    // When building for production, turn off a few fuses that disable certain
+    // debug controls of the app.
+    ...((process.env.NODE_ENV === 'production')
+      ? [new FusesPlugin({
+          version: FuseVersion.V1,
+          [FuseV1Options.RunAsNode]: false,
+          [FuseV1Options.EnableCookieEncryption]: true,
+          [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+          [FuseV1Options.EnableNodeCliInspectArguments]: false
+        })]
+      : [])
   ],
   makers: [
     {
