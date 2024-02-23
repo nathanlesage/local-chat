@@ -18,6 +18,8 @@
 
 ![An impression of LocalChat running OpenOrca Mistral 7b quantized](./static/screenshot.png)
 
+> [Download the most recent version here](https://github.com/nathanlesage/local-chat/releases).
+
 ## Overview
 
 LocalChat provides a chat-like interface for interacting with generative **Large Language Models (LLMs)**. It looks and feels like any chat conversation, but happens locally on your computer. No data is ever transmitted to some cloud server.
