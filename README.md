@@ -5,7 +5,7 @@
   LocalChat
 </h1>
 
-> Chat with generative language models locally on your computer with zero setup. LocalChat is a simple, easy to set-up local AI chat built on top of [llama.cpp](https://github.com/ggerganov/llama.cpp). It requires no technical knowledge and enables users to experience ChatGPT-like behavior on their own machines — fully GDPR-compliant and without the fear of accidentally leaking information.
+> Chat with generative language models locally on your computer with zero setup. LocalChat is a simple, easy to set-up, and Open Source local AI chat built on top of [llama.cpp](https://github.com/ggerganov/llama.cpp). It requires no technical knowledge and enables users to experience ChatGPT-like behavior on their own machines — fully GDPR-compliant and without the fear of accidentally leaking information. [Download LocalChat for macOS, Windows, or Linux here](https://github.com/nathanlesage/local-chat/releases).
 
 <p align="center">
   <strong>Table of Contents</strong><br>
@@ -17,8 +17,6 @@
 </p>
 
 ![An impression of LocalChat running OpenOrca Mistral 7b quantized](./static/screenshot.png)
-
-> [Download the most recent version here](https://github.com/nathanlesage/local-chat/releases).
 
 ## Overview
 
