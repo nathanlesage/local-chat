@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://github.com/nathanlesage/local-chat">
-    <img src="https://raw.githubusercontent.com/nathanlesage/local-chat/master/static/png/64x64.png" alt="LocalChat"/>
+    <img src="https://raw.githubusercontent.com/nathanlesage/local-chat/master/static/icon.iconset/icon_512x512.png" width="128" height="128" alt="LocalChat"/>
   </a><br>
   LocalChat
 </h1>
