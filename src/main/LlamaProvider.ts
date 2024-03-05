@@ -54,25 +54,6 @@ export interface LlamaCppInfo {
   }
 }
 
-export type ChatPromptWrapper = 'auto'|'empty'|'general'|'llama'|'chatml'|'falcon'
-
-export function getSupportedModelPrompt (prompt: string): ChatPromptWrapper {
-  switch (prompt) {
-    case 'llama':
-      return 'llama'
-    case 'chatml':
-      return 'chatml'
-    case 'falcon':
-      return 'falcon'
-    case 'general':
-      return 'general'
-    case 'empty':
-      return 'empty'
-    default:
-      return 'auto'
-  }
-}
-
 export class LlamaProvider {
   private loadedModel: ModelDescriptor|undefined
   private lastLoadedConversation: Conversation|undefined

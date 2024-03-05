@@ -115,7 +115,6 @@ import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 import { formatNumber } from './util/numbers'
 import LCButton from './reusable-components/LCButton.vue'
-import type { ChatPromptWrapper } from 'src/main/LlamaProvider'
 
 const store = useModelStore()
 
@@ -168,7 +167,7 @@ function selectModelPromptWrapper (event: Event, modelPath: string) {
     return
   }
 
-  updateModelConfig(modelPath, { prompt: select.value as ChatPromptWrapper })
+  updateModelConfig(modelPath, { prompt: select.value })
 }
 
 function updateModelConfig (modelPath: string, config: Partial<ModelConfig>) {

@@ -5,14 +5,13 @@ import { promises as fs, createWriteStream } from 'fs'
 import type { GGUFMetadata } from 'gguf/dist/metadataTypes'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import got from 'got'
-import { ChatPromptWrapper } from './LlamaProvider'
 import { registerShutdownTask, registerStartupTask } from './util/lifecycle'
 
 export interface ModelConfig {
   /**
    * The prompt template to use for this specific model
    */
-  prompt: ChatPromptWrapper
+  prompt: string
   /**
    * An override for the context length. This is crucial for quantized models
    * where the context length in the metadata still refers to the non-quantized
