@@ -64,7 +64,7 @@
       <div class="message-icon">
         <vue-feather type="code"></vue-feather>
       </div>
-      <div class="message-body" v-html="md2html(responseText)">
+      <div class="message-body" v-html="md2html(cleanedResponseText)">
       </div>
     </div>
 
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUpdated, toRef, watch, onMounted } from 'vue'
+import { ref, onUpdated, toRef, watch, onMounted, computed } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { formatDate, formatGenerationTime } from './util/dates'
@@ -109,6 +109,7 @@ import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
+import sanitizeHtml, { defaults as sanitizeHtmlDefaults } from 'sanitize-html'
 
 const ipcRenderer = window.ipc
 
@@ -132,6 +133,16 @@ const modelStore = useModelStore()
 
 const systemPrompt = ref<string>('')
 const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
+const cleanedResponseText = computed(() => {
+  const rawText = responseText.value
+  // Detect if there is an open code block that is not yet closed
+  const allCodeBlocksClosed = rawText
+    .split('\n')
+    .filter(line => line.startsWith('```'))
+    .length % 2 === 0
+  
+  return (!allCodeBlocksClosed) ? rawText + '\n```' : rawText
+})
 const message = ref<string>('')
 const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
@@ -161,7 +172,13 @@ function scrollChatDown () {
  * @return  {string}           The HTML
  */
 function md2html (content: string): string {
-  return converter.makeHtml(content)
+  const html = converter.makeHtml(content)
+  const sanitizedHtml = sanitizeHtml(html, {
+    allowedTags: sanitizeHtmlDefaults.allowedTags.concat([ 'img' ]),
+    allowedIframeHostnames: [],
+    disallowedTagsMode: 'recursiveEscape'
+  })
+  return sanitizedHtml
 }
 
 /**
