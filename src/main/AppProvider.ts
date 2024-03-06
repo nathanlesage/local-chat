@@ -26,9 +26,6 @@ export class AppProvider {
   private mainWindow: BrowserWindow|undefined
 
   constructor () {
-    // Allow the conversation manager to register its startup tasks.
-    ConversationManager.getConversationManager()
-
     ipcMain.on('prompt', (event, args: AppNotification) => {
       const opt: MessageBoxOptions = {
         title: args.title,
