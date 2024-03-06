@@ -45,7 +45,7 @@ export class ConversationManager {
     })
 
     registerShutdownTask(async () => {
-      this.persistConversations()
+      await this.persistConversations()
     })
 
     ipcMain.handle('get-conversation', async (event, args) => {
