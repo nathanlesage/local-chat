@@ -9,6 +9,7 @@ import { ModelDescriptor } from './ModelManager'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import { ChatMessage, Conversation } from './ConversationManager'
 import _ from 'lodash'
+import { PromptManager } from './PromptManager'
 
 /**
  * Small utility function that determines how many GPU layers the model may use.
@@ -38,7 +39,7 @@ export interface LlamaStatus {
 }
 
 /**
- * Retrieves the Llama module. This is to fix a BUG (see)
+ * Retrieves the Llama module. This is to fix a BUG (see https://github.com/withcatai/node-llama-cpp/issues/135)
  */
 async function llamaModule (): Promise<typeof import('node-llama-cpp')> {
   return await (mod as any)
@@ -153,24 +154,6 @@ export class LlamaProvider {
     return conv
   }
 
-  private async getChatTemplateWrapper (prompt: string): Promise<'auto'|ChatWrapper> {
-    const module = await llamaModule()
-    switch (prompt) {
-      case 'llama':
-        return new module.LlamaChatWrapper()
-      case 'chatml':
-        return new module.ChatMLChatWrapper()
-      case 'falcon':
-        return new module.FalconChatWrapper()
-      case 'general':
-        return new module.GeneralChatWrapper()
-      case 'empty':
-        return new module.EmptyChatWrapper()
-      default:
-        return 'auto'
-    }
-  }
-
   async loadModel (modelDescriptor: ModelDescriptor, conversation?: Conversation, force: boolean = false) {
     if (
       _.isEqual(modelDescriptor, this.loadedModel) &&
@@ -211,10 +194,12 @@ export class LlamaProvider {
           contextSize: modelDescriptor.config.contextLengthOverride
       })
 
+      const promptManager = PromptManager.getInstance()
+
       this.session = new module.LlamaChatSession({
           contextSequence: context.getSequence(),
           systemPrompt: conversation?.systemPrompt,
-          chatWrapper: await this.getChatTemplateWrapper(modelDescriptor.config.prompt)
+          chatWrapper: await promptManager.getChatWrapper(modelDescriptor.config.prompt)
       })
 
       if (conversation !== undefined) {

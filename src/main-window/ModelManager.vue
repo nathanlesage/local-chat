@@ -86,6 +86,14 @@
         <option value="llama" v-bind:selected="model.config.prompt === 'llama'">Llama</option>
         <option value="chatml" v-bind:selected="model.config.prompt === 'chatml'">ChatML</option>
         <option value="falcon" v-bind:selected="model.config.prompt === 'falcon'">Falcon</option>
+        <option
+          v-for="name in promptStore.promptNames"
+          v-key="name"
+          v-bind:selected="model.config.prompt === name"
+          v-bind:value="name"
+        >
+          {{ name }}
+        </option>
       </select>
     </div>
 
@@ -115,8 +123,10 @@ import { formatSeconds } from './util/dates'
 import { ref } from 'vue'
 import { formatNumber } from './util/numbers'
 import LCButton from './reusable-components/LCButton.vue'
+import { usePromptTemplateStore } from './pinia/prompt-templates'
 
 const store = useModelStore()
+const promptStore = usePromptTemplateStore()
 
 const ipcRenderer = window.ipc
 

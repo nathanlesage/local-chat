@@ -8,5 +8,6 @@ import { ref } from 'vue'
 export const useAppStateStore = defineStore('app-state', () => {
   const showSidebar = ref<boolean>(true)
   const showModelManager = ref<boolean>(false)
-  return { showSidebar, showModelManager }
+  const showPromptManager = ref<boolean>(true) // DEBUG
+  return { showSidebar, showModelManager, showPromptManager }
 })

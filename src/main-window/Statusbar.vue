@@ -27,7 +27,7 @@
             >
               {{ modelStore.llamaInfo.release }}
             </a>
-          </code> &mdash; {{ formatSize(modelStore.llamaInfo.vramState.used) }}/{{ formatSize(modelStore.llamaInfo.vramState.total) }})
+          </code> | {{ Math.round(modelStore.llamaInfo.vramState.used / modelStore.llamaInfo.vramState.total * 100) }}% VRAM usage)
         </template>
         <template v-else>
           (<code><span title="Llama.cpp release is unknown">unknown</span></code>)
@@ -52,8 +52,21 @@
     </LCButton>
     </div>
     <div>
-      <LCButton v-on:click="appState.showModelManager = !appState.showModelManager">
-        Manage Models
+      <LCButton
+        v-on:click="switchTo('model-manager')"
+        square="true"
+        icon="hard-drive"
+        title="Model Manager"
+        v-bind:type="appState.showModelManager ? 'primary': undefined"
+      >
+      </LCButton>
+      <LCButton
+        v-on:click="switchTo('prompt-manager')"
+        square="true"
+        icon="file-text"
+        title="Prompt Manager"
+        v-bind:type="appState.showPromptManager ? 'primary': undefined"
+      >
       </LCButton>
     </div>
   </div>
@@ -91,6 +104,20 @@ function abortGeneration () {
 
 function forceReloadModel () {
   ipcRenderer.invoke('force-reload-model').catch(err => alertError(err))
+}
+
+function switchTo (where: 'model-manager'|'prompt-manager') {
+  if (where === 'model-manager' && !appState.showModelManager) {
+    appState.showModelManager = true
+    appState.showPromptManager = false
+  } else if (where === 'model-manager' && appState.showModelManager) {
+    appState.showModelManager = false
+  } else if (where === 'prompt-manager' && !appState.showPromptManager) {
+    appState.showPromptManager = true
+    appState.showModelManager = false
+  } else if (where === 'prompt-manager' && appState.showPromptManager) {
+    appState.showPromptManager = false
+  }
 }
 </script>
 

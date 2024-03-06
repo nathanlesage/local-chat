@@ -45,6 +45,7 @@
     <div id="chat-wrapper">
       <!-- Show modals if applicable -->
       <ModelManager v-if="appState.showModelManager"></ModelManager>
+      <PromptManager v-else-if="appState.showPromptManager"></PromptManager>
       <!-- Otherwise, show the welcome message if there are no models. -->
       <WelcomeMessage v-else-if="modelStore.models.length === 0"></WelcomeMessage>
       <!-- Else, if we have a conversation, display that one ...-->
@@ -65,6 +66,7 @@ import ConversationManager from './ConversationManager.vue'
 import { nextTick, ref, watch } from 'vue'
 import { useModelStore } from './pinia/models'
 import ModelManager from './ModelManager.vue'
+import PromptManager from './PromptManager.vue'
 import WelcomeMessage from './WelcomeMessage.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useAppStateStore } from './pinia/app-state'
