@@ -6,6 +6,10 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-assembler'
 import { Logger } from './main/Logger'
 import { awaitStartupTasks } from './main/util/lifecycle'
 import { UpdateSourceType, updateElectronApp } from 'update-electron-app'
+import { PromptManager } from './main/PromptManager'
+import { ConversationManager } from './main/ConversationManager'
+import { ModelManager } from './main/ModelManager'
+import { WindowPositionProvider } from './main/WindowPositionProvider'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -41,9 +45,16 @@ updateElectronApp({
   // Very important so that the user can delay the update until the next start.
   notifyUser: true
 })
+
 // Step 3: Initiate the app itself so that it can run some preboot logic.
 const localChat = new AppProvider()
+// Step 4: Call all providers to let them register their startup tasks
+ConversationManager.getConversationManager()
+ModelManager.getModelManager()
+PromptManager.getInstance()
+WindowPositionProvider.getWindowPositionProvider()
 
+// Step 5: Wait until the app is actually ready and finalize the boot
 app.whenReady().then(async () => {
   await afterReadySetup()
   await awaitStartupTasks()

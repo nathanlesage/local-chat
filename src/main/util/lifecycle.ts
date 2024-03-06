@@ -161,7 +161,7 @@ export async function runStartupTasks () {
 }
 
 app.whenReady().then(() => {
-  // First, begin to run the startup tasks.
+  // Immediately begin to run the startup tasks.
   startupPromise = runStartupTasks().catch(err => console.error(err))
 
   // Then, hook into the appropriate events to run our shutdown tasks.

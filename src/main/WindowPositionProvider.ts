@@ -1,4 +1,5 @@
 import { BrowserWindow, Rectangle, screen } from 'electron'
+import { registerStartupTask } from './util/lifecycle'
 
 // TODO: React to screen events!
 
@@ -51,15 +52,17 @@ export class WindowPositionProvider {
     this.configuration = []
     this.windowReferences = new Map()
 
-    // Hook into the screen module events.
-    screen.addListener('display-added', () => {
-      this.onScreenConfigChange()
-    })
-    screen.addListener('display-metrics-changed', () => {
-      this.onScreenConfigChange()
-    })
-    screen.addListener('display-removed', () => {
-      this.onScreenConfigChange()
+    registerStartupTask(() => {
+      // Hook into the screen module events.
+      screen.addListener('display-added', () => {
+        this.onScreenConfigChange()
+      })
+      screen.addListener('display-metrics-changed', () => {
+        this.onScreenConfigChange()
+      })
+      screen.addListener('display-removed', () => {
+        this.onScreenConfigChange()
+      })
     })
   }
 
