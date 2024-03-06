@@ -97,7 +97,6 @@
 import { ref, onUpdated, toRef, watch, onMounted } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
-import { useConversationStore } from './pinia/conversations'
 import { formatDate, formatGenerationTime } from './util/dates'
 import showdown from 'showdown'
 import hljs from 'highlight.js'
@@ -127,7 +126,6 @@ const converter = new showdown.Converter({
 const DEFAULT_RESPONSE_TEXT = 'Generating response…'
 
 // Add stores
-const conversationStore = useConversationStore()
 const modelStore = useModelStore()
 
 // Refs and computed values
