@@ -1587,6 +1587,13 @@ astral-regex@^2.0.0:
   resolved "https://registry.yarnpkg.com/astral-regex/-/astral-regex-2.0.0.tgz#483143c567aeed4785759c0865786dc77d7d2e31"
   integrity sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
 
+async-retry@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/async-retry/-/async-retry-1.3.3.tgz#0e7f36c04d8478e7a58bdbed80cedf977785f280"
+  integrity sha512-wfr/jstw9xNi/0teMHrRW7dsz3Lt5ARhYNZ2ewpadnhaIp5mbALhOAP+EAdsC7t4Z6wqsDVv9+W6gm1Dk9mEyw==
+  dependencies:
+    retry "0.13.1"
+
 async@^1.4.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
@@ -4153,10 +4160,10 @@ lie@~3.3.0:
   dependencies:
     immediate "~3.0.5"
 
-lifecycle-utils@^1.2.2:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/lifecycle-utils/-/lifecycle-utils-1.2.2.tgz#04f27e6f529f6363f24ff81dfdf599db91a16d97"
-  integrity sha512-3KMdFt0e5iG4SuynIzkn9hP9/2egwKB6Nxp7nyjXxZQNojYWvqVk/0AVV/FaXpMVzB/7dHVLGKoWVq+FoabbQw==
+lifecycle-utils@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/lifecycle-utils/-/lifecycle-utils-1.3.1.tgz#7dc4d4cfdd70a793f33a85a05ec5d6645817c6f3"
+  integrity sha512-Vo3cw99hNk95lG+dxmaA9kfpsYXW/0g9MwvnO0zpvfstiC0ds8fAIzCa9M+hVPnFF5dvx9oy4nlEbIFChdL7RA==
 
 listr2@^5.0.3:
   version "5.0.8"
@@ -4711,11 +4718,12 @@ node-gyp@^9.0.0:
     tar "^6.1.2"
     which "^2.0.2"
 
-node-llama-cpp@^3.0.0-beta.11:
-  version "3.0.0-beta.11"
-  resolved "https://registry.yarnpkg.com/node-llama-cpp/-/node-llama-cpp-3.0.0-beta.11.tgz#2eb24090dc660f661857b6809a41efa2ce55682a"
-  integrity sha512-DDU+ptT3pO+xFl2AGykRV8XUBg2H1EQGmTFft9Fv7j1h6fgwVjk2j7E9SxPmbrJF3URkf+xngxJXWAqzfB48bA==
+node-llama-cpp@3.0.0-beta.13:
+  version "3.0.0-beta.13"
+  resolved "https://registry.yarnpkg.com/node-llama-cpp/-/node-llama-cpp-3.0.0-beta.13.tgz#ef52f2f6a30b58cb5bb49b34f944e139479d5b6e"
+  integrity sha512-dzn1iihPV8s6ZP/ePrgxQNCZtLe/VthFoDM4XrTW4enve5avT32OmNIMMTGgfvS7iUySBziYf6I6FkC3opWdfA==
   dependencies:
+    async-retry "^1.3.3"
     bytes "^3.1.2"
     chalk "^5.3.0"
     chmodrp "^1.0.2"
@@ -4725,7 +4733,7 @@ node-llama-cpp@^3.0.0-beta.11:
     cross-spawn "^7.0.3"
     env-var "^7.3.1"
     fs-extra "^11.2.0"
-    lifecycle-utils "^1.2.2"
+    lifecycle-utils "^1.3.1"
     log-symbols "^5.1.0"
     node-addon-api "^7.0.0"
     octokit "^3.1.0"
@@ -5500,15 +5508,15 @@ restore-cursor@^4.0.0:
     onetime "^5.1.0"
     signal-exit "^3.0.2"
 
+retry@0.13.1, retry@^0.13.1:
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/retry/-/retry-0.13.1.tgz#185b1587acf67919d63b357349e03537b2484658"
+  integrity sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==
+
 retry@^0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/retry/-/retry-0.12.0.tgz#1b42a6266a21f07421d1b0b54b7dc167b01c013b"
   integrity sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==
-
-retry@^0.13.1:
-  version "0.13.1"
-  resolved "https://registry.yarnpkg.com/retry/-/retry-0.13.1.tgz#185b1587acf67919d63b357349e03537b2484658"
-  integrity sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==
 
 reusify@^1.0.4:
   version "1.0.4"
