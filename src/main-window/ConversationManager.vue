@@ -105,8 +105,11 @@ onUpdated(() => {
   }
 })
 
-function selectConversation (conversationId: string) {
+function selectConversation (conversationId: string|undefined) {
   abortChangeDescription()
+  if (conversationId === conversationStore.activeConversation) {
+    return // No change
+  }
   ipcRenderer.invoke('select-conversation', conversationId)
     .catch(err => alertError(err))
 }
