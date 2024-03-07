@@ -561,9 +561,19 @@ textarea#prompt, textarea#system-prompt {
     border-bottom-color: rgba(255, 255, 255, .2);
   }
 
+  .message table tr:nth-child(2n) {
+    background-color: rgb(55, 60, 69);
+  }
 
-.message table tr:nth-child(2n) {
-  background-color: rgb(55, 60, 69);
-}
+  div#chat .card-button {
+    border-color: rgb(80, 80, 80);
+    background-color: rgb(30, 30, 30);
+    color: rgb(160, 160, 160);
+  }
+
+  div#chat .card-button:hover {
+    border-color: rgb(120, 120, 120);
+    color: rgb(210, 210, 210);
+  }
 }
 </style>
