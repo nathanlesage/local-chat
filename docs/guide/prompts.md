@@ -34,8 +34,8 @@ In the context of LocalChat's templates (which are based off `node-llama-cpp`), 
 Here is an example of a history prompt template:
 
 ```
-{{roleName}}:
-{{message}}
+\{\{roleName\}\}:
+\{\{message\}\}
 ```
 
 This indicates that the model has, during training, seen messages in this format. If you prompt a model with a template whose "user role" is "Human" with the question "What is generative AI?", the template will result in the following text being passed to the model:
@@ -48,10 +48,10 @@ What is generative AI?
 Next, here is an example of a prompt template:
 
 ```
-{{systemPrompt}}
-{{history}}
+\{\{systemPrompt\}\}
+\{\{history\}\}
 assistant:
-{{completion}}
+\{\{completion\}\}
 user:
 ```
 
@@ -63,7 +63,7 @@ What is generative AI?
 assistant:
 ```
 
-Note that the entire part after `{{completion}}` is missing. The reason is that the completion placeholder indicates the part of the prompt where the model will actually generate text. "completion" separates the text that will be fed into the model from the text that the library will look for to determine if the model is done generating. In our example, the string that indicates that it is finished is "user:". Note furthermore, that the model will probably not generate "user:", but rather "Human:", because that is what the user role is. Thus, you need to pay attention to this part.
+Note that the entire part after `\{\{completion\}\}` is missing. The reason is that the completion placeholder indicates the part of the prompt where the model will actually generate text. "completion" separates the text that will be fed into the model from the text that the library will look for to determine if the model is done generating. In our example, the string that indicates that it is finished is "user:". Note furthermore, that the model will probably not generate "user:", but rather "Human:", because that is what the user role is. Thus, you need to pay attention to this part.
 
 When LocalChat prompts a model, the process of using a prompt template to wrap the existing conversation and prompt it is straight forward:
 
@@ -86,15 +86,15 @@ Next, you need to define three "role names". These will be used to build the cha
 
 The final two pieces of information are the prompt template and the history prompt template. Let us first focus on the history prompt template.
 
-This template is used to wrap each individual message. You must specify two placeholders: `{{roleName}}`, which will be replaced with one of the three specified role names, and `{{message}}`, which will be replaced with the actual message.
+This template is used to wrap each individual message. You must specify two placeholders: `\{\{roleName\}\}`, which will be replaced with one of the three specified role names, and `\{\{message\}\}`, which will be replaced with the actual message.
 
-The final piece is the full prompt template. The prompt template should include the placeholder `{{systemPrompt}}`, as otherwise the model does not receive your system prompt (but this placeholder is optional). Next, you must provide the placeholder `{{history}}`. This will be replaced with all messages, each wrapped in the history prompt template.
+The final piece is the full prompt template. The prompt template should include the placeholder `\{\{systemPrompt\}\}`, as otherwise the model does not receive your system prompt (but this placeholder is optional). Next, you must provide the placeholder `\{\{history\}\}`. This will be replaced with all messages, each wrapped in the history prompt template.
 
-The final part of the prompt template concerns the model's prediction, which is indicated by the placeholder `{{completion}}`.
+The final part of the prompt template concerns the model's prediction, which is indicated by the placeholder `\{\{completion\}\}`.
 
-Note that you probably need to define some string beforehand, and some afterwards. Usually, the part of the prompt after the `{{completion}}` placeholder must be some string of characters that the model will generate after it has finished its response, and the part before that placeholder must be a string of characters the model expects before it generates its response.
+Note that you probably need to define some string beforehand, and some afterwards. Usually, the part of the prompt after the `\{\{completion\}\}` placeholder must be some string of characters that the model will generate after it has finished its response, and the part before that placeholder must be a string of characters the model expects before it generates its response.
 
-As an example, for the OpenChat model, the end of sequence-string is `<|end_of_turn|>`. The string in between `{{history}}` and `{{completion}}` should be the last text that the model sees in the prompt before it is asked to generate a response, which is usually the model's role name, but may differ. Note that you cannot use `{{roleName}}` here, since that will not be expaned in the prompt.
+As an example, for the OpenChat model, the end of sequence-string is `<|end_of_turn|>`. The string in between `\{\{history\}\}` and `\{\{completion\}\}` should be the last text that the model sees in the prompt before it is asked to generate a response, which is usually the model's role name, but may differ. Note that you cannot use `\{\{roleName\}\}` here, since that will not be expaned in the prompt.
 
 ### Editing a Prompt
 
