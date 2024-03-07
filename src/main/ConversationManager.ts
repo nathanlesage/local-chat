@@ -39,9 +39,6 @@ export class ConversationManager {
     registerStartupTask(async () => {
       this.conversations = await this.loadConversations()
       console.log(`Restored ${this.conversations.length} conversations.`)
-      if (this.conversations.length > 0) {
-        this.selectConversation(this.conversations[0].id)
-      }
     })
 
     registerShutdownTask(async () => {
