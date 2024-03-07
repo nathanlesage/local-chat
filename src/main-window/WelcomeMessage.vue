@@ -1,6 +1,6 @@
 <template>
   <div id="welcome-message">
-    <h1>LocalChat</h1>
+    <h1>LocalChat <small>v{{ version }}</small></h1>
     <p id="slogan">LocalChat is a ChatGPT-like chat that runs on your computer.</p>
     <p>
       It looks like you don't have any models available. To start chatting, you'll need to get one.
@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { version } from '../../package.json'
 </script>
 
 <style>
@@ -37,6 +38,11 @@
 
 #welcome-message h1 {
   text-align: center;
+}
+
+#welcome-message h1 small {
+  font-size: 70%;
+  color: rgb(100, 100, 100);
 }
 
 #slogan {

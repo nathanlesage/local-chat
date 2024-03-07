@@ -49,11 +49,7 @@
       <!-- Otherwise, show the welcome message if there are no models. -->
       <WelcomeMessage v-else-if="modelStore.models.length === 0"></WelcomeMessage>
       <!-- Else, if we have a conversation, display that one ...-->
-      <Chat v-else-if="conversationStore.currentConversation !== undefined" v-bind:conversation="conversationStore.currentConversation"></Chat>
-      <!-- Or, finally, show a suggestion to create a new conversation. -->
-      <p v-else>
-        Create a new conversation to get started.
-      </p>
+      <Chat v-else></Chat>
     </div>
     <Statusbar></Statusbar>
   </div>

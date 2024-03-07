@@ -1,80 +1,94 @@
 <template>
   <div id="chat">
-    <div>
+    <template v-if="conversation !== undefined">
       <p>
         You started this conversation
-        <strong>{{ formatDate(conversation.startedAt, 'datetime') }}</strong>
+        <strong>{{ formatDate(conversation.startedAt, 'datetime', false, true) }}</strong>
         with:
       </p>
-      <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
-    </div>
+      <p>
+        <ModelSelectorWidget v-on:select-model="selectModel($event)"></ModelSelectorWidget>
+      </p>
 
-    <p v-if="conversation.messages.length === 0">
-      This is the start of your conversation. Send a message to start chatting.
-      <!-- TODO: Maybe add some example prompts here? -->
-    </p>
+      <!-- System prompt -->
+      <details>
+        <summary>System prompt</summary>
+        <textarea
+          id="system-prompt"
+          v-model="systemPrompt"
+          placeholder="Write an optional system prompt here. Leave empty to use the default prompt."
+        ></textarea>
+        <LCButton v-on:click="updateSystemPrompt()" v-bind:disabled="systemPrompt === (conversation.systemPrompt ?? '')">Save system prompt</LCButton>
+      </details>
 
-    <!-- System prompt -->
-    <details>
-      <summary>System prompt</summary>
-      <textarea
-        id="system-prompt"
-        v-model="systemPrompt"
-        placeholder="Write an optional system prompt here. Leave empty to use the default prompt."
-      ></textarea>
-      <LCButton v-on:click="updateSystemPrompt()" v-bind:disabled="systemPrompt === (conversation.systemPrompt ?? '')">Save system prompt</LCButton>
-    </details>
-
-    <div
-      v-for="(message, idx) in conversation.messages"
-      v-bind:class="{
-        message: true,
-        user: message.role === 'user',
-        assistant: message.role === 'assistant'
-      }"
-    >
-      <div class="message-header">
-        <h4>{{ message.role === 'user' ? 'You' : (modelStore.getModelName(conversation.modelPath) ?? 'Assistant') }}:</h4>
-        <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
-        <div class="message-generation-time" v-if="message.generationTime > 0">
-          Generated in {{  formatGenerationTime(message.generationTime) }}s
+      <!-- Chat messages -->
+      <div
+        v-for="(message, idx) in conversation.messages"
+        v-bind:class="{
+          message: true,
+          user: message.role === 'user',
+          assistant: message.role === 'assistant'
+        }"
+      >
+        <div class="message-header">
+          <h4>{{ message.role === 'user' ? 'You' : (modelStore.getModelName(conversation.modelPath) ?? 'Assistant') }}:</h4>
+          <div class="message-timestamp">{{ formatDate(message.timestamp, 'time') }}</div>
+          <div class="message-generation-time" v-if="message.generationTime > 0">
+            Generated in {{  formatGenerationTime(message.generationTime) }}s
+          </div>
+          <div class="message-actions">
+            <LCButton icon="copy" square="true" title="Copy message to clipboard" v-on:click="copyMessageToClipboard(idx)"></LCButton>
+            <LCButton icon="trash-2" square="true" v-bind:type="'danger'" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
+          </div>
         </div>
-        <div class="message-actions">
-          <LCButton icon="copy" square="true" title="Copy message to clipboard" v-on:click="copyMessageToClipboard(idx)"></LCButton>
-          <LCButton icon="trash-2" square="true" v-bind:type="'danger'" title="Delete this message" v-on:click="deleteMessage(idx)"></LCButton>
+        <div class="message-icon">
+          <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
+          <vue-feather v-else type="code"></vue-feather>
         </div>
-      </div>
-      <div class="message-icon">
-        <vue-feather v-if="message.role === 'user'" type="user"></vue-feather>
-        <vue-feather v-else type="code"></vue-feather>
-      </div>
-      <div class="message-body" v-html="md2html(message.content)">
-      </div>
-    </div>
-
-    <div id="generating-message" class="message assistant" v-if="isGenerating">
-      <div class="message-header">
-        <h4>{{ conversation ? modelStore.getModelName(conversation.modelPath) ?? 'Assistant' : 'Assistant' }}:</h4>
-        <!-- While generating we only show a loading spinner -->
-        <div class="message-timestamp" v-html="LoadingSpinner"></div>
-        <div class="message-generation-time">
-          {{ formatGenerationTime(currentGenerationTime) }}s
+        <div class="message-body" v-html="md2html(message.content)">
         </div>
       </div>
-      <div class="message-icon">
-        <vue-feather type="code"></vue-feather>
+      <div id="generating-message" class="message assistant" v-if="isGenerating">
+        <div class="message-header">
+          <h4>{{ conversation ? modelStore.getModelName(conversation.modelPath) ?? 'Assistant' : 'Assistant' }}:</h4>
+          <!-- While generating we only show a loading spinner -->
+          <div class="message-timestamp" v-html="LoadingSpinner"></div>
+          <div class="message-generation-time">
+            {{ formatGenerationTime(currentGenerationTime) }}s
+          </div>
+        </div>
+        <div class="message-icon">
+          <vue-feather type="code"></vue-feather>
+        </div>
+        <div class="message-body" v-html="md2html(cleanedResponseText)">
+        </div>
       </div>
-      <div class="message-body" v-html="md2html(cleanedResponseText)">
-      </div>
-    </div>
 
-    <div id="regenerate-button-wrapper" v-if="!isGenerating">
-      <LCButton v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</LCButton>
-    </div>
+      <div id="regenerate-button-wrapper" v-if="!isGenerating">
+        <LCButton v-if="canRegenerateLastResponse()" v-on:click="regenerateLastResponse">Regenerate last response</LCButton>
+      </div>
+    </template>
+    <template v-else>
+      <!-- Shown when there is no conversation -->
+      <h1>LocalChat <small>v{{ version }}</small></h1>
+      <p>
+        Continue an existing conversation from the sidebar, start a new one by
+        typing a message below, or maybe try out an example prompt below.
+      </p>
+      <!-- TODO: Add example prompts here -->
+      <div class="card-button-wrapper">
+        <div
+          v-for="promptText in examplePrompts"
+          class="card-button"
+          v-on:click="message = promptText; prompt()"
+        >
+          {{ promptText }}
+        </div>
+      </div>
+    </template>
 
     <!-- Text area -->
     <textarea
-      v-if="conversation !== undefined"
       v-model="message"
       id="prompt"
       name="prompt"
@@ -85,16 +99,26 @@
     ></textarea>
 
     <div id="chat-button-wrapper">
-      <LCButton id="send" type="primary" icon="send" v-on:click.prevent="prompt">
+      <LCButton
+        id="send"
+        type="primary"
+        icon="send"
+        v-on:click.prevent="prompt"
+      >
         Send
       </LCButton>
-      <LCButton v-on:click.prevent="exportConversation">Export conversation</LCButton>
+      <LCButton
+        v-if="conversation !== undefined"
+        v-on:click.prevent="exportConversation"
+      >
+        Export conversation
+      </LCButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onUpdated, toRef, watch, onMounted, computed } from 'vue'
+import { ref, onUpdated, watch, onMounted, computed } from 'vue'
 
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { formatDate, formatGenerationTime } from './util/dates'
@@ -103,36 +127,48 @@ import hljs from 'highlight.js'
 
 import 'highlight.js/styles/atom-one-dark.min.css'
 import 'highlightjs-copy/dist/highlightjs-copy.min.css'
-import type { Conversation } from 'src/main/ConversationManager'
 import { alertError } from './util/prompts'
 import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
 import sanitizeHtml, { defaults as sanitizeHtmlDefaults } from 'sanitize-html'
+import { useConversationStore } from './pinia/conversations'
+import { version } from '../../package.json'
 
 const ipcRenderer = window.ipc
 
-const props = defineProps<{
-  conversation: Conversation
-}>()
-
 // Additional setup
-// Add copy button plugin
 hljs.addPlugin(new CopyButtonPlugin())
 const converter = new showdown.Converter({
   tables: true,
   smoothLivePreview: true
 })
+
 const DEFAULT_RESPONSE_TEXT = 'Generating response…'
+
+const examplePrompts = [
+  'Recommend a movie to watch tonight.',
+  'How does generative AI work?',
+  'What does "confabulation" mean in the context of generative AI?',
+  'What is the difference between an authorization and an appropriation in U.S. Congress?'
+]
 
 // Add stores
 const modelStore = useModelStore()
+const conversationStore = useConversationStore()
 
 // Refs and computed values
 
 const systemPrompt = ref<string>('')
+
+/**
+ * ResponseText is the raw generated model message.
+ */
 const responseText = ref<string>(DEFAULT_RESPONSE_TEXT)
+/**
+ * Cleaned response text is cleaned up, but still raw Markdown
+ */
 const cleanedResponseText = computed(() => {
   const rawText = responseText.value
   // Detect if there is an open code block that is not yet closed
@@ -147,8 +183,10 @@ const message = ref<string>('')
 const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
 
+const conversation = computed(() => conversationStore.currentConversation)
+
 // Update the system prompt if applicable
-watch(toRef(props, 'conversation'), (newValue) => {
+watch(conversation, (newValue) => {
   systemPrompt.value = newValue?.systemPrompt ?? ''
 })
 
@@ -187,11 +225,11 @@ function md2html (content: string): string {
  * @param   {number}  idx  The message index
  */
 function copyMessageToClipboard(idx: number) {
-  if (props.conversation === undefined) {
+  if (conversation.value === undefined) {
     return
   }
 
-  const plain = props.conversation.messages[idx].content
+  const plain = conversation.value.messages[idx].content
   const html = md2html(plain)
   const data = new ClipboardItem({
     'text/plain': new Blob([plain], { type: 'text/plain' }),
@@ -213,6 +251,20 @@ onMounted(() => { hljs.highlightAll() })
  * generation.
  */
 function prompt () {
+  if (conversation.value === undefined) {
+    // The current conversation is undefined, so before we can prompt anything,
+    // we have to start a conversation, select it, and then prompt the model.
+    ipcRenderer.invoke('new-conversation')
+      .then(() => {
+        const off = watch(conversation, () => {
+          off()
+          prompt()
+        })
+      })
+      .catch(err => alertError(err))
+    return // Return for now, prompt will be called again once the conversation is started
+  }
+
   isGenerating.value = true
   const start = Date.now()
   currentGenerationTime.value = 0
@@ -258,7 +310,7 @@ function selectModel (modelPath: string) {
  */
 function updateSystemPrompt () {
   const newPrompt = systemPrompt.value.trim()
-  if (newPrompt === (props.conversation.systemPrompt ?? '')) {
+  if (newPrompt === (conversation.value?.systemPrompt ?? '')) {
     return
   }
   ipcRenderer.invoke('update-system-prompt', newPrompt)
@@ -269,7 +321,11 @@ function updateSystemPrompt () {
  * Initiates a conversation export
  */
 function exportConversation () {
-  ipcRenderer.invoke('export-conversation', props.conversation.id)
+  if (conversation.value === undefined) {
+    return
+  }
+
+  ipcRenderer.invoke('export-conversation', conversation.value.id)
     .catch(err => alertError(err))
 }
 
@@ -279,8 +335,12 @@ function exportConversation () {
  * @param   {number}  messageIdx      The message to delete
  */
 function deleteMessage (messageIdx: number) {
+  if (conversation.value == undefined) {
+    return
+  }
+
   ipcRenderer.invoke('delete-messages', {
-    conversationId: props.conversation.id,
+    conversationId: conversation.value.id,
     messageIdx: [messageIdx]
   })
     .catch(err => alertError(err))
@@ -292,13 +352,13 @@ function deleteMessage (messageIdx: number) {
  * @return  {boolean} False if it is not possible, otherwise true.
  */
 function canRegenerateLastResponse (): boolean {
-  if (props.conversation.messages.length < 2) {
+  if (conversation.value === undefined || conversation.value.messages.length < 2) {
     return false
   }
 
   // First, assert that the last message is by the model
-  const msgs = props.conversation.messages
-  const messageCount = props.conversation.messages.length
+  const msgs = conversation.value.messages
+  const messageCount = conversation.value.messages.length
   if (msgs[messageCount - 1].role !== 'assistant' || msgs[messageCount - 2].role !== 'user') {
     return false
   }
@@ -314,15 +374,15 @@ function canRegenerateLastResponse (): boolean {
 function regenerateLastResponse () {
   // Regenerating basically involves deleting the last two messages, and
   // then prompting with the second-to-last (user) message
-  if (!canRegenerateLastResponse()) {
+  if (!canRegenerateLastResponse() || conversation.value === undefined) {
     return
   }
 
-  const messageCount = props.conversation.messages.length
-  const oldPrompt = props.conversation.messages[messageCount - 2].content
+  const messageCount = conversation.value.messages.length
+  const oldPrompt = conversation.value.messages[messageCount - 2].content
 
   ipcRenderer.invoke('delete-messages', {
-    conversationId: props.conversation.id,
+    conversationId: conversation.value.id,
     messageIdx: [messageCount - 2, messageCount - 1]
   })
     .catch(err => alertError(err))
@@ -339,9 +399,39 @@ div#chat {
   margin: 0 auto;
 }
 
+div#chat h1 small {
+  font-size: 70%;
+  color: rgb(100, 100, 100);
+}
+
 div#regenerate-button-wrapper {
   text-align: center;
   padding: 5px 0;
+}
+
+div#chat .card-button-wrapper {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+div#chat .card-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid rgb(200, 200, 200);
+  background-color: rgb(240, 240, 240);
+  color: rgb(100, 100, 100);
+  font-size: 80%;
+  transition: 0.2s border-color,color ease;
+}
+
+div#chat .card-button:hover {
+  border-color: rgb(100, 100, 100);
+  color: rgb(30, 30, 30);
 }
 
 textarea#prompt, textarea#system-prompt {
