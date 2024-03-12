@@ -72,11 +72,11 @@ button svg {
 }
 
 button.primary {
-  background-color: rgb(95, 155, 216);
-  color: #fff;
+  background-color: var(--accent-color);
+  color: var(--accent-color-contrast);
 }
 
-button.primary svg { stroke: #fff; }
+button.primary svg { stroke: var(--accent-color-contrast); }
 
 button.danger {
   background-color: rgb(64, 1, 1);

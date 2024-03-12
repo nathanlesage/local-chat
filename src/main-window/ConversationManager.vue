@@ -191,6 +191,7 @@ function monthNumberToName (month: number): string {
 div#conversations details summary {
   font-weight: bold;
   margin: 10px 0;
+  color: var(--accent-color);
   /* Add a bit of spacing between the marker and the text */
   list-style-position: outside;
   padding-left: 10px;
@@ -208,7 +209,7 @@ div#conversations details[open] summary::marker {
 
 div#conversations .conversation {
   position: relative;
-  padding: 5px;
+  padding: 5px 10px;
   border-radius: 8px;
   font-size: 80%;
   line-height: 20px;
