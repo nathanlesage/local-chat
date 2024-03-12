@@ -209,6 +209,7 @@ div#sidebar-header input[type="search"] {
   height: var(--sidebar-header-height);
   width: v-bind(sidebarWidth);
   background-color: transparent;
+  outline: none;
   color: inherit;
   border: none;
   display: block;
