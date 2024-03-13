@@ -132,7 +132,6 @@ import ModelSelectorWidget from './reusable-components/ModelSelectorWidget.vue'
 import LCButton from './reusable-components/LCButton.vue'
 import { useModelStore } from './pinia/models'
 import CopyButtonPlugin from 'highlightjs-copy'
-import sanitizeHtml, { defaults as sanitizeHtmlDefaults } from 'sanitize-html'
 import { useConversationStore } from './pinia/conversations'
 import { version } from '../../package.json'
 
@@ -179,6 +178,7 @@ const cleanedResponseText = computed(() => {
   
   return (!allCodeBlocksClosed) ? rawText + '\n```' : rawText
 })
+
 const message = ref<string>('')
 const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
@@ -210,13 +210,10 @@ function scrollChatDown () {
  * @return  {string}           The HTML
  */
 function md2html (content: string): string {
+  // Escape any HTML tags, because for the purposes of this app, we disallow custom HTML
+  content = content.replace(/<(.*)>/g, '&lt;$1&gt;')
   const html = converter.makeHtml(content)
-  const sanitizedHtml = sanitizeHtml(html, {
-    allowedTags: sanitizeHtmlDefaults.allowedTags.concat([ 'img' ]),
-    allowedIframeHostnames: [],
-    disallowedTagsMode: 'recursiveEscape'
-  })
-  return sanitizedHtml
+  return html
 }
 
 /**
