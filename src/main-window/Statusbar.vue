@@ -68,6 +68,14 @@
         v-bind:type="appState.showPromptManager ? 'primary': undefined"
       >
       </LCButton>
+      <LCButton
+        v-on:click="switchTo('config-manager')"
+        square="true"
+        icon="settings"
+        title="Config Manager"
+        v-bind:type="appState.showConfig ? 'primary': undefined"
+      >
+      </LCButton>
     </div>
   </div>
 </template>
@@ -106,17 +114,19 @@ function forceReloadModel () {
   ipcRenderer.invoke('force-reload-model').catch(err => alertError(err))
 }
 
-function switchTo (where: 'model-manager'|'prompt-manager') {
-  if (where === 'model-manager' && !appState.showModelManager) {
-    appState.showModelManager = true
+function switchTo (where: 'model-manager'|'prompt-manager'|'config-manager') {
+  if (where === 'model-manager') {
+    appState.showModelManager = !appState.showModelManager
     appState.showPromptManager = false
-  } else if (where === 'model-manager' && appState.showModelManager) {
+    appState.showConfig = false
+  } else if (where === 'prompt-manager') {
+    appState.showPromptManager = !appState.showPromptManager
     appState.showModelManager = false
-  } else if (where === 'prompt-manager' && !appState.showPromptManager) {
-    appState.showPromptManager = true
-    appState.showModelManager = false
-  } else if (where === 'prompt-manager' && appState.showPromptManager) {
+    appState.showConfig = false
+  } else if (where === 'config-manager') {
+    appState.showConfig = !appState.showConfig
     appState.showPromptManager = false
+    appState.showModelManager = false
   }
 }
 </script>

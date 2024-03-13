@@ -9,5 +9,6 @@ export const useAppStateStore = defineStore('app-state', () => {
   const showSidebar = ref<boolean>(true)
   const showModelManager = ref<boolean>(false)
   const showPromptManager = ref<boolean>(false)
-  return { showSidebar, showModelManager, showPromptManager }
+  const showConfig = ref(false)
+  return { showSidebar, showModelManager, showPromptManager, showConfig }
 })

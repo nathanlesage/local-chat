@@ -10,6 +10,7 @@ import { PromptManager } from './main/PromptManager'
 import { ConversationManager } from './main/ConversationManager'
 import { ModelManager } from './main/ModelManager'
 import { WindowPositionProvider } from './main/WindowPositionProvider'
+import { ConfigProvider } from './main/ConfigProvider'
 
 // Immediately after launch, check if there is already another instance of
 // Zettlr running, and, if so, exit immediately. The arguments (including files)
@@ -52,6 +53,7 @@ const localChat = new AppProvider()
 ConversationManager.getConversationManager()
 ModelManager.getModelManager()
 PromptManager.getInstance()
+ConfigProvider.getConfigProvider()
 WindowPositionProvider.getWindowPositionProvider()
 
 // Step 5: Wait until the app is actually ready and finalize the boot
