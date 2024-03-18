@@ -4,6 +4,7 @@ import path from 'path'
 import { promises as fs } from 'fs'
 import { getDefaultConfig } from './util/get-default-config'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
+import safeAssign from './util/safe-assign'
 
 export interface Config {
   appearance: 'light'|'dark'|'system'
@@ -49,7 +50,7 @@ export class ConfigProvider {
     try {
       await fs.access(this.configPath)
       const data = await fs.readFile(this.configPath, 'utf-8')
-      this.config = JSON.parse(data)
+      this.config = safeAssign(JSON.parse(data), getDefaultConfig())
     } catch(err) {
       // File possibly doesn't exist
       this.config = getDefaultConfig()
