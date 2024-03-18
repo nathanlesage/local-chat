@@ -105,7 +105,7 @@
         icon="send"
         v-on:click.prevent="prompt"
       >
-        Send
+        {{ sendButtonLabel }}
       </LCButton>
       <LCButton
         v-if="conversation !== undefined"
@@ -184,6 +184,7 @@ const currentGenerationTime = ref<number>(0)
 const isGenerating = ref<boolean>(false)
 
 const conversation = computed(() => conversationStore.currentConversation)
+const sendButtonLabel = computed(() => conversation.value !== undefined ? 'Send' : 'Start conversation')
 
 // Update the system prompt if applicable
 watch(conversation, (newValue) => {
@@ -446,6 +447,7 @@ textarea#prompt, textarea#system-prompt {
 #chat-button-wrapper {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
 }
 
 .message {
