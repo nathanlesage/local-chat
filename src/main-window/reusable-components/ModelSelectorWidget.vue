@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ModelDescriptor } from 'src/main/ModelManager'
+import { getModelName } from '../util/get-model-name'
 import { useModelStore } from '../pinia/models'
 import { formatSize } from '../util/sizes'
 
@@ -35,14 +35,6 @@ function selectModel (event: Event) {
     const modelToSelect = target.value
 
     emit('select-model', modelToSelect)
-  }
-}
-
-function getModelName (model: ModelDescriptor) {
-  if (model.metadata?.general.name === undefined) {
-    return model.name
-  } else {
-    return model.metadata.general.name
   }
 }
 
