@@ -13,7 +13,6 @@ const ipcRenderer = window.ipc
 export const useConfigStore = defineStore('config', () => {
   const config = ref<Config>(getDefaultConfig())
 
-  console.log('Loading config')
   ipcRenderer.invoke('get-config', {})
     .then((conf: Config) => {
       config.value = conf
