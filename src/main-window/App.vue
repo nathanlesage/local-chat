@@ -99,8 +99,7 @@ watch(showSearchBar, (newValue, oldValue) => {
 })
 
 function newConversation () {
-  ipcRenderer.invoke('new-conversation', modelStore.currentModel?.path)
-    .catch(err => alertError(err))
+  ipcRenderer.invoke('new-conversation').catch(err => alertError(err))
 }
 
 function beginResizing (event: MouseEvent) {

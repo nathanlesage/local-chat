@@ -6,6 +6,7 @@ import { LlamaProvider } from "./LlamaProvider"
 import path from 'path'
 import { promises as fs } from 'fs'
 import { registerShutdownTask, registerStartupTask } from "./util/lifecycle"
+import { ConfigProvider } from "./ConfigProvider"
 
 export interface ChatMessage {
   role: 'user'|'assistant'|'system'
@@ -70,13 +71,26 @@ export class ConversationManager {
     })
 
     ipcMain.handle('new-conversation', async (event, args) => {
-      let model = this.llamaProvider.getLoadedModel()
+      const { defaultModel } = ConfigProvider.getConfigProvider().getConfig()
       const availableModels = await this.modelManager.getAvailableModels()
+      let model
 
+      // First: Explicit model selection by caller
       if (typeof args === 'string' && await this.modelManager.modelAvailable(args)) {
         model = await this.modelManager.getModel(args)
       }
 
+      // Second: Use default model
+      if (model === undefined && defaultModel && await this.modelManager.modelAvailable(defaultModel)) {
+        model = await this.modelManager.getModel(defaultModel)
+      }
+
+      // Third: If the default model can't be found, use the current loaded one
+      if (model === undefined) {
+        model = this.llamaProvider.getLoadedModel()
+      }
+
+      // Fourth: If all else fails, use the first available
       if (model === undefined && availableModels.length > 0) {
         model = availableModels[0]
       }

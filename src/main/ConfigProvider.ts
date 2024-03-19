@@ -5,9 +5,11 @@ import { promises as fs } from 'fs'
 import { getDefaultConfig } from './util/get-default-config'
 import { broadcastIPCMessage } from './util/broadcast-ipc-message'
 import safeAssign from './util/safe-assign'
+import { ModelManager } from './ModelManager'
 
 export interface Config {
   appearance: 'light'|'dark'|'system'
+  defaultModel: null|string
 }
 
 export class ConfigProvider {
@@ -70,6 +72,18 @@ export class ConfigProvider {
    */ 
   private applyConfigChanges (): void {
     nativeTheme.themeSource = this.config.appearance
+
+    // Verify the default model still exists
+    if (this.config.defaultModel !== null) {
+      const modelManager = ModelManager.getModelManager()
+      modelManager.modelAvailable(this.config.defaultModel)
+        .then(isAvailable => {
+          if (!isAvailable) {
+            this.config.defaultModel = null
+            this.applyConfigChanges()
+          }
+        }).catch(err => console.error(err))
+    }
   }
 
   /**
@@ -81,5 +95,14 @@ export class ConfigProvider {
     this.config = { ...this.config, ...config }
     this.applyConfigChanges()
     broadcastIPCMessage('config-updated', this.config)
+  }
+
+  /**
+   * Retrieves the config
+   *
+   * @return  {Config}  The config
+   */
+  public getConfig (): Config {
+    return this.config
   }
 }
