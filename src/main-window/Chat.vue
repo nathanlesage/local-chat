@@ -123,6 +123,7 @@ import { ref, onUpdated, watch, onMounted, computed } from 'vue'
 import LoadingSpinner from './icons/loading-spinner.svg'
 import { formatDate, formatGenerationTime } from './util/dates'
 import showdown from 'showdown'
+import sanitize from 'sanitize-html'
 import hljs from 'highlight.js'
 
 import 'highlight.js/styles/atom-one-dark.min.css'
@@ -204,17 +205,37 @@ function scrollChatDown () {
 }
 
 /**
- * Turns a string of Markdown into HTML
+ * Turns a string of Markdown into HTML. In addition, this performs HTML
+ * sanitization so that in some edge-cases the model cannot conduct harakiri or
+ * otherwise crash the web app.
  *
  * @param   {string}  content  The plain text
  *
  * @return  {string}           The HTML
  */
 function md2html (content: string): string {
-  // Escape any HTML tags, because for the purposes of this app, we disallow custom HTML
-  content = content.replace(/<(.*)>/g, '&lt;$1&gt;')
   const html = converter.makeHtml(content)
-  return html
+  const sanitized = sanitize(html, {
+    disallowedTagsMode: 'escape',
+    parser: {
+      lowerCaseTags: false,
+      lowerCaseAttributeNames: false
+    },
+    transformTags: {
+      // Ensure that a user will see any links the model may generate or which
+      // they themselves insert...
+      a: function (tagName, tagAttributes) {
+        return {
+          tagName,
+          attribs: {
+            title: tagAttributes.href ?? '',
+            ...tagAttributes // ... but allow existing titles to take precedence
+          }
+        }
+      }
+    }
+  })
+  return sanitized
 }
 
 /**
