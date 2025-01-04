@@ -1,3 +1,5 @@
+> **Update Jan 4, 2025**: I noticed that LocalChat is gaining in popularity. That's great! However, this year I will have to defend my PhD thesis, so I will have limited time to code, which I will mainly direct towards my main app, [Zettlr](https://github.com/Zettlr/Zettlr). This means that LocalChat won't receive many commits from my side. That being said, **it is much easier to review & merge pull requests** and in case there are PRs that improve the app, I'll happily review and merge, and continue to update the app. However, this will only work if people open PRs. So, if you enjoy the app, please contribute. Regular development on my own side can proceed in early 2026 again.
+
 <h1 align="center">
   <a href="https://github.com/nathanlesage/local-chat">
     <img src="https://raw.githubusercontent.com/nathanlesage/local-chat/master/static/icon.iconset/icon_512x512.png" width="128" height="128" alt="LocalChat"/>
